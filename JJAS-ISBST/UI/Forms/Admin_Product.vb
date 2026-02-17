@@ -105,8 +105,8 @@ End Sub
 
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Dim Add As New Add_Product
-        If Add.ShowDialog() = DialogResult.OK Then
+        Dim f As New Add_Product()
+        If f.ShowDialog() = DialogResult.OK Then
             displayData("")
         End If
     End Sub
@@ -124,29 +124,14 @@ End Sub
 
 
         Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-        Dim f As New Edit_Product
+        Dim f As New Add_Product
 
         Try
 
-            f.ProductID = row.Cells("ProductID").Value.ToString()
-            f.BarcodeNumber = row.Cells("BarcodeNumber").Value.ToString()
-            f.Product = row.Cells("Product").Value.ToString()
-            f.SellingPrice = row.Cells("SellingPrice").Value.ToString()
-            f.Description = row.Cells("Description").Value.ToString()
-            f.SizeID = row.Cells("SizeID").Value.ToString
-            f.BrandID = row.Cells("BrandID").Value.ToString
-            f.ColorID = row.Cells("ColorID").Value.ToString
-            f.CategoryID = row.Cells("CategoryID").Value.ToString
-
-
-            If row.Cells("ImagePath").Value IsNot Nothing Then
-                f.ImagePath = row.Cells("ImagePath").Value.ToString()
-            Else
-                f.ImagePath = String.Empty
-            End If
+            f.ProductID = Convert.ToInt32(row.Cells("ProductID").Value)
 
             If Not Validation(SelectedID) Then
-                f.txtSellingPrice.ReadOnly = True
+                f.LockSellingPrice = True
             End If
 
             If f.ShowDialog() = DialogResult.OK Then
@@ -262,7 +247,14 @@ End Sub
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
+<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
+=======
+                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                    cmd.ExecuteNonQuery()
+                End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -349,7 +341,14 @@ End Sub
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
+<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
+=======
+                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                        cmd.ExecuteNonQuery()
+                    End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)

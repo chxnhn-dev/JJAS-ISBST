@@ -78,8 +78,8 @@ Public Class Admin_Color
         End Try
     End Sub
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Dim Add As New Add_Color
-        If Add.ShowDialog() = DialogResult.OK Then
+        Dim f As New Add_Color()
+        If f.ShowDialog() = DialogResult.OK Then
             displayData("")
         End If
     End Sub
@@ -98,10 +98,9 @@ Public Class Admin_Color
 
         Try
             Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim f As New Edit_Color
-            f.ColorID = row.Cells(0).Value.ToString()
-            f.Color = row.Cells(1).Value.ToString()
-            'f.Description = row.Cells(2).Value.ToString()
+            Dim f As New Add_Color With {
+                .ColorID = Convert.ToInt32(row.Cells(0).Value)
+            }
 
             If f.ShowDialog() = DialogResult.OK Then
                 displayData("")
@@ -206,7 +205,14 @@ Public Class Admin_Color
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
+<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
+=======
+                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                    cmd.ExecuteNonQuery()
+                End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -295,7 +301,14 @@ Public Class Admin_Color
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
+<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
+=======
+                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                        cmd.ExecuteNonQuery()
+                    End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)

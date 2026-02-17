@@ -41,8 +41,8 @@ Public Class Admin_Discount
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Dim AddSize As New Add_Discount
-        If AddSize.ShowDialog() = DialogResult.OK Then
+        Dim f As New Add_Discount()
+        If f.ShowDialog() = DialogResult.OK Then
             displayData("")
         End If
     End Sub
@@ -82,11 +82,9 @@ Public Class Admin_Discount
         Try
 
             Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim f As New Edit_Discount
-            f.DiscountID = row.Cells("DiscountID").Value.ToString()
-            f.DiscountName = row.Cells("DiscountName").Value.ToString()
-            f.DiscountValue = row.Cells("DiscountValue").Value.ToString()
-            f.Description = row.Cells("Description").Value.ToString()
+            Dim f As New Add_Discount With {
+                .DiscountID = Convert.ToInt32(row.Cells("DiscountID").Value)
+            }
 
             If f.ShowDialog() = DialogResult.OK Then
                 displayData("")

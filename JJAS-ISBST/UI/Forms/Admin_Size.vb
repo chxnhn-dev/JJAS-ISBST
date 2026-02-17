@@ -69,8 +69,8 @@ Public Class Admin_Size
         End Try
     End Sub
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Dim AddSize As New Add_Measurement
-        If AddSize.ShowDialog() = DialogResult.OK Then
+        Dim f As New Add_Measurement()
+        If f.ShowDialog() = DialogResult.OK Then
             displayData("")
         End If
     End Sub
@@ -89,10 +89,9 @@ Public Class Admin_Size
         Try
 
             Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim f As New Edit_Size
-            f.SizeID = row.Cells("SIzeID").Value.ToString()
-            f.Size = row.Cells("SIze").Value.ToString()
-            f.Description = row.Cells("Description").Value.ToString()
+            Dim f As New Add_Measurement With {
+                .SizeID = Convert.ToInt32(row.Cells(0).Value)
+            }
 
             If f.ShowDialog() = DialogResult.OK Then
                 displayData("")
@@ -197,7 +196,14 @@ Public Class Admin_Size
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
+<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
+=======
+                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                    cmd.ExecuteNonQuery()
+                End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)

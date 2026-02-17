@@ -243,7 +243,14 @@ Public Class Admin_Deliveries
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
+<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
+=======
+                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                    cmd.ExecuteNonQuery()
+                End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -415,7 +422,14 @@ Public Class Admin_Deliveries
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
+<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
+=======
+                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                        cmd.ExecuteNonQuery()
+                    End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)

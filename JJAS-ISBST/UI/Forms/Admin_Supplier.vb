@@ -143,7 +143,7 @@ Public Class Admin_Supplier
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Dim f As New Add_Supplier
+        Dim f As New Add_Supplier()
         If f.ShowDialog() = DialogResult.OK Then
             DisplayData("")
         End If
@@ -160,12 +160,8 @@ Public Class Admin_Supplier
             Dim supplierIdVal = row.Cells("SupplierId").Value
             Dim supplierId As Integer = If(supplierIdVal IsNot Nothing AndAlso Not IsDBNull(supplierIdVal), Convert.ToInt32(supplierIdVal), -1)
 
-            Dim f As New Edit_Supplier With {
-                .SupplierId = supplierId,
-                .CompanyName = SafeCellString(row, "Company"),
-                .SupplierFullName = SafeCellString(row, "SupplierName"),
-                .ContactNumber = SafeCellString(row, "ContactNumber"),
-                .Address = SafeCellString(row, "Address")
+            Dim f As New Add_Supplier With {
+                .SupplierId = supplierId
             }
 
             If f.ShowDialog() = DialogResult.OK Then
@@ -327,7 +323,14 @@ Public Class Admin_Supplier
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
+<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
+=======
+                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                    cmd.ExecuteNonQuery()
+                End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -349,7 +352,14 @@ Public Class Admin_Supplier
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
+<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
+=======
+                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
+                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
+                        cmd.ExecuteNonQuery()
+                    End Using
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)

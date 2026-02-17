@@ -87,7 +87,7 @@ ORDER BY
     ' ADD USER
     ' ================================
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
-        Dim f As New Add_User
+        Dim f As New Add_User()
         If f.ShowDialog() = DialogResult.OK Then
             displayData("")
         End If
@@ -114,43 +114,38 @@ ORDER BY
 
         Dim row As DataGridViewRow = DGVuser.SelectedRows(0)
 
-        ' Create Edit_User form and fill the basic info
-        Dim f As New Edit_User With {
-        .UserID = Convert.ToInt32(row.Cells("UserID").Value),
-        .Role = row.Cells("Role").Value.ToString(),
-        .FirstName = row.Cells("FirstName").Value.ToString(),
-        .LastName = row.Cells("LastName").Value.ToString(),
-        .ContactNumber = row.Cells("ContactNumber").Value.ToString(),
-        .Email = row.Cells("Email").Value.ToString(),
-        .Address = row.Cells("Address").Value.ToString(),
-        .Username = row.Cells("Username").Value.ToString()
-    }
+        Dim f As New Add_User With {
+            .UserID = Convert.ToInt32(row.Cells("UserID").Value)
+        }
 
-        ' 🟢 Fetch and attach the user's hashed password before showing the Edit_User form
-        Try
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "SELECT Password FROM tbl_User WHERE UserID = @UserID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@UserID", f.UserID)
-                    Dim result = cmd.ExecuteScalar()
-                    If result IsNot Nothing Then
-                        f.Tag = result.ToString() ' store the hash temporarily in the Tag property
-                    End If
-                End Using
-            End Using
-        Catch ex As Exception
-            MessageBox.Show("Error loading user hash: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
-
-        ' Show the Edit_User form
         If f.ShowDialog() = DialogResult.OK Then
             displayData("")
         End If
     End Sub
     Private Function IsUserLoggedIn(userId As Integer) As Boolean
+<<<<<<< HEAD
         ' Uses dbo.tbl_AppSession (see /DB/Create_Session_Table.sql)
         Return SessionService.IsUserLoggedIn(userId)
+=======
+        Dim isLoggedIn As Boolean = False
+
+        Try
+            Using conn As SqlConnection = DataAccess.GetConnection()
+                conn.Open()
+                Using cmd As New SqlCommand("SELECT IsLoggedIn FROM tbl_User WHERE UserID=@UserID", conn)
+                    cmd.Parameters.AddWithValue("@UserID", userId)
+                    Dim result = cmd.ExecuteScalar()
+                    If result IsNot Nothing AndAlso result IsNot DBNull.Value Then
+                        isLoggedIn = Convert.ToBoolean(result)
+                    End If
+                End Using
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Error checking login status: " & ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+
+        Return isLoggedIn
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
     End Function
 
 
@@ -436,3 +431,4 @@ ORDER BY
         displayData("")
     End Sub
 End Class
+

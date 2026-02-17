@@ -598,8 +598,11 @@
     <Compile Include="UI\Forms\Update_Vat.vb">
       <SubType>Form</SubType>
     </Compile>
+<<<<<<< HEAD
     <Compile Include="Services\SessionService.vb" />
     <Compile Include="Utils\SessionContext.vb" />
+=======
+>>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
     <Compile Include="Utils\Utilities.vb" />
   </ItemGroup>
   <ItemGroup>
