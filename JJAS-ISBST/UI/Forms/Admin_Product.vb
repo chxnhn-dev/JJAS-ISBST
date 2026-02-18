@@ -4,7 +4,10 @@ Imports JJAS_ISBST
 Imports JJAS_ISBST.Login
 Imports Microsoft.VisualBasic.ApplicationServices
 Public Class Admin_Product
-    Dim SelectedID As String = -1
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColProductId As String = "ProductID"
+    Dim SelectedID As Integer = -1
     Dim formtoshow As Form
     Private Sub Admin_Product_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         BlockCopyPaste(txtSearch)
@@ -40,58 +43,86 @@ Public Class Admin_Product
         Next
     End Sub
     Private Sub displayData(searchText As String)
-    Try
-        Dim repo As New ProductRepository()
-        Dim dt As DataTable = repo.GetActiveProducts(searchText)
+        Try
+            Dim repo As New ProductRepository()
+            Dim dt As DataTable = repo.GetActiveProducts(searchText)
 
-        ' Load image previews into a dedicated column for the grid
-        ImageLoader.AddAndLoadImages(dt, "ImagePath", "ProductImage")
+            ' Load image previews into a dedicated column for the grid
+            ImageLoader.AddAndLoadImages(dt, "ImagePath", "ProductImage")
 
-        DGVsize.DataSource = dt
+            DGVsize.DataSource = dt
 
-        If DGVsize.Columns.Contains("ProductImage") Then
-            DGVsize.Columns("ProductImage").DisplayIndex = 0
-            Dim imgCol As DataGridViewImageColumn = DirectCast(DGVsize.Columns("ProductImage"), DataGridViewImageColumn)
-            imgCol.ImageLayout = DataGridViewImageCellLayout.Zoom
-            imgCol.Width = 120
-            imgCol.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+            If DGVsize.Columns.Contains("ProductImage") Then
+                DGVsize.Columns("ProductImage").DisplayIndex = 0
+                Dim imgCol As DataGridViewImageColumn = DirectCast(DGVsize.Columns("ProductImage"), DataGridViewImageColumn)
+                imgCol.ImageLayout = DataGridViewImageCellLayout.Zoom
+                imgCol.Width = 120
+                imgCol.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+            End If
+
+            Dim hiddenCols() As String = {"ImagePath", "ProductID", "ColorID", "CategoryID", "BrandID", "SizeID"}
+            For Each colName In hiddenCols
+                If DGVsize.Columns.Contains(colName) Then
+                    DGVsize.Columns(colName).Visible = False
+                End If
+            Next
+
+            EnsureActionColumns()
+
+            With DGVsize
+                If .Columns.Contains("SellingPrice") Then
+                    .Columns("SellingPrice").DefaultCellStyle.Format = "C2"
+                    .Columns("SellingPrice").DefaultCellStyle.FormatProvider = New Globalization.CultureInfo("en-PH")
+                End If
+            End With
+
+            DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            For Each col As DataGridViewColumn In DGVsize.Columns
+                If col.Name = "ProductImage" OrElse col.Name = ColViewEdit OrElse col.Name = ColDelete Then
+                    col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+                Else
+                    col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+                End If
+            Next
+
+            ApplyStandardGridLayout(DGVsize)
+            DGVsize.ClearSelection()
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while loading products: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVsize.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(viewCol)
         End If
 
-        Dim hiddenCols() As String = {"ImagePath", "ProductID", "ColorID", "CategoryID", "BrandID", "SizeID"}
-        For Each colName In hiddenCols
-            If DGVsize.Columns.Contains(colName) Then
-                DGVsize.Columns(colName).Visible = False
-            End If
-        Next
+        If Not DGVsize.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(deleteCol)
+        End If
+    End Sub
 
-        With DGVsize
-            If .Columns.Contains("SellingPrice") Then
-                .Columns("SellingPrice").DefaultCellStyle.Format = "C2"
-                .Columns("SellingPrice").DefaultCellStyle.FormatProvider = New Globalization.CultureInfo("en-PH")
-            End If
-        End With
-
-        DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-        For Each col As DataGridViewColumn In DGVsize.Columns
-            If col.Name = "ProductImage" Then
-                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
-            Else
-                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
-            End If
-        Next
-
-        DGVsize.ClearSelection()
-    Catch ex As Exception
-        MessageBox.Show("An error occurred while loading products: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-    End Try
-End Sub
-
-    Private Sub DGVsize_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs)
+    Private Sub DGVsize_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs) Handles DGVsize.DataBindingComplete
         ' Set row height
-        DGVsize.RowTemplate.Height = 100
-        For Each row As DataGridViewRow In DGVsize.Rows
-            row.Height = 100
-        Next
+        ApplyStandardGridLayout(DGVsize)
 
         ' Set font size for cells
         DGVsize.DefaultCellStyle.Font = New Font("Arial", 8, FontStyle.Regular)
@@ -111,24 +142,52 @@ End Sub
         End If
     End Sub
     Private Sub DGVSize_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellClick
-        If e.RowIndex >= 0 Then
-            Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
-            SelectedID = row.Cells(0).Value.ToString()
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim productId As Integer
+        If TryGetProductId(row, productId) Then
+            SelectedID = productId
+        Else
+            SelectedID = -1
         End If
     End Sub
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs)
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-
         Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim productId As Integer
+        If Not TryGetProductId(row, productId) Then
+            MessageBox.Show("Invalid Product ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        OpenEditModalById(productId)
+    End Sub
+
+    Private Sub OpenEditModalById(productId As Integer)
+        Dim row As DataGridViewRow = DGVsize.Rows.Cast(Of DataGridViewRow)().
+            FirstOrDefault(Function(r)
+                               If r.IsNewRow Then Return False
+                               Dim idValue As Integer
+                               Return TryGetProductId(r, idValue) AndAlso idValue = productId
+                           End Function)
+        If row Is Nothing Then
+            MessageBox.Show("Selected product row was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
         Dim f As New Add_Product
 
         Try
 
-            f.ProductID = Convert.ToInt32(row.Cells("ProductID").Value)
+            f.ProductID = productId
 
             If Not Validation(SelectedID) Then
                 f.LockSellingPrice = True
@@ -144,8 +203,61 @@ End Sub
             MessageBox.Show("An error occurred while editing product: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
 
-
     End Sub
+
+    Private Sub DeleteById(productId As Integer)
+        If Not Validation(productId) Then
+            MessageBox.Show("Cannot delete. This product is still Used", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            DGVsize.ClearSelection()
+            Exit Sub
+        End If
+
+        Try
+
+            If MessageBox.Show("Are you sure you want to delete this row?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+                Using conn As SqlConnection = DataAccess.GetConnection()
+                    conn.Open()
+                    Dim sql As String = "Delete tbl_Products WHERE ProductID = @ProductID"
+                    Using cmd As New SqlCommand(sql, conn)
+                        cmd.Parameters.AddWithValue("@ProductID", productId)
+                        cmd.ExecuteNonQuery()
+                    End Using
+                End Using
+
+                LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "Deleted product.")
+
+                MessageBox.Show("Row deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+
+
+                displayData("")
+                DGVsize.ClearSelection()
+                SelectedID = -1
+            End If
+
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while deleting product: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub DGVsize_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+        If Not DGVsize.Columns.Contains(ColViewEdit) OrElse Not DGVsize.Columns.Contains(ColDelete) Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim productId As Integer
+        If Not TryGetProductId(row, productId) Then Exit Sub
+        SelectedID = productId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(productId)
+        ElseIf colName = ColDelete Then
+            DeleteById(productId)
+        End If
+    End Sub
+
 
     Private Sub txtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
         displayData(txtSearch.Text)
@@ -180,44 +292,32 @@ End Sub
             End Using
         End Using
     End Function
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs)
 
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        If Not Validation(SelectedID) Then
-            MessageBox.Show("Cannot delete. This product is still Used", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            DGVsize.ClearSelection()
+        Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim productId As Integer
+        If Not TryGetProductId(row, productId) Then
+            MessageBox.Show("Invalid Product ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        Try
-
-            If MessageBox.Show("Are you sure you want to delete this row?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-                Using conn As SqlConnection = DataAccess.GetConnection()
-                    conn.Open()
-                    Dim sql As String = "Delete tbl_Products WHERE ProductID = @ProductID"
-                    Using cmd As New SqlCommand(sql, conn)
-                        cmd.Parameters.AddWithValue("@ProductID", SelectedID)
-                        cmd.ExecuteNonQuery()
-                    End Using
-                End Using
-
-                LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "Deleted product.")
-
-                MessageBox.Show("Row deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-
-                displayData("")
-                DGVsize.ClearSelection()
-            End If
-
-        Catch ex As Exception
-            MessageBox.Show("An error occurred while deleting product: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        DeleteById(productId)
     End Sub
+
+    Private Function TryGetProductId(row As DataGridViewRow, ByRef productId As Integer) As Boolean
+        productId = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColProductId) Then Return False
+
+        Dim raw As Object = row.Cells(ColProductId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), productId)
+    End Function
 
 
     Private Sub StartSwitchTimer()
@@ -234,27 +334,11 @@ End Sub
         formtoshow.Show()
         StartSwitchTimer()
     End Sub
-
-
-    Private Sub btnTrash_Click(sender As Object, e As EventArgs)
-        Dim f As New Trash_Product()
-        If f.ShowDialog() = DialogResult.OK Then
-            displayData("")
-        End If
-    End Sub
-
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -341,14 +425,7 @@ End Sub
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -400,7 +477,7 @@ End Sub
         StartSwitchTimer()
     End Sub
 
-    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+    Private Sub btnRefresh_Click(sender As Object, e As EventArgs)
         displayData("")
     End Sub
 End Class

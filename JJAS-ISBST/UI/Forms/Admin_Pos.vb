@@ -4,6 +4,8 @@ Imports System.Text
 Imports JJAS_ISBST.Login
 
 Public Class Admin_Pos
+    Private Const CartEditButtonName As String = "colCartEdit"
+    Private Const CartRemoveButtonName As String = "colCartRemove"
     Private preferredPrinter As String = "XP-58"
     Private receiptFont As New Font("Consolas", 10)
     Private WithEvents printDoc As New PrintDocument
@@ -190,17 +192,103 @@ Public Class Admin_Pos
         DGVCart.ClearSelection()
 
         DGVCart.DataSource = dtPending
+        ConfigureCartGridColumns()
+        EnsureCartActionColumns()
+        ApplyStandardGridLayout(DGVCart)
     End Sub
 
     ' Format product list
-    Private Sub DGVdeliveries_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs)
-        DGVCart.RowTemplate.Height = 50
-        For Each row As DataGridViewRow In DGVCart.Rows
-            row.Height = 50
-        Next
+    Private Sub DGVdeliveries_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs) Handles DGVCart.DataBindingComplete
         DGVCart.DefaultCellStyle.Font = New Font("Arial", 8, FontStyle.Regular)
         DGVCart.ColumnHeadersDefaultCellStyle.Font = New Font("Arial", 9, FontStyle.Bold)
         DGVCart.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
+        ConfigureCartGridColumns()
+        EnsureCartActionColumns()
+        ApplyStandardGridLayout(DGVCart)
+    End Sub
+
+    Private Sub ConfigureCartGridColumns()
+        If DGVCart.Columns.Count = 0 Then Exit Sub
+
+        DGVCart.SelectionMode = DataGridViewSelectionMode.FullRowSelect
+        DGVCart.MultiSelect = False
+        DGVCart.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+
+        Dim hiddenCols() As String = {"ImagePath", "DeliveryProductID", "ProductID"}
+        For Each colName In hiddenCols
+            If DGVCart.Columns.Contains(colName) Then
+                DGVCart.Columns(colName).Visible = False
+            End If
+        Next
+
+        If DGVCart.Columns.Contains("ProductImage") Then
+            Dim imgCol As DataGridViewImageColumn = TryCast(DGVCart.Columns("ProductImage"), DataGridViewImageColumn)
+            If imgCol IsNot Nothing Then
+                imgCol.ImageLayout = DataGridViewImageCellLayout.Zoom
+                imgCol.Width = 120
+                imgCol.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+                imgCol.DisplayIndex = 0
+            End If
+        End If
+
+        If DGVCart.Columns.Contains("BarcodeNumber") Then
+            DGVCart.Columns("BarcodeNumber").HeaderText = "Barcode"
+        End If
+
+        If DGVCart.Columns.Contains("ProductName") Then
+            DGVCart.Columns("ProductName").HeaderText = "Product"
+        End If
+
+        If DGVCart.Columns.Contains("Quantity") Then
+            DGVCart.Columns("Quantity").HeaderText = "Qty"
+            DGVCart.Columns("Quantity").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
+        End If
+
+        If DGVCart.Columns.Contains("SellingPrice") Then
+            DGVCart.Columns("SellingPrice").HeaderText = "Price"
+            DGVCart.Columns("SellingPrice").DefaultCellStyle.Format = "C2"
+            DGVCart.Columns("SellingPrice").DefaultCellStyle.FormatProvider = New Globalization.CultureInfo("en-PH")
+            DGVCart.Columns("SellingPrice").DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight
+        End If
+    End Sub
+
+    Private Sub EnsureCartActionColumns()
+        If Not DGVCart.Columns.Contains(CartEditButtonName) Then
+            Dim editCol As New DataGridViewButtonColumn() With {
+                .Name = CartEditButtonName,
+                .HeaderText = "",
+                .Text = "Edit",
+                .UseColumnTextForButtonValue = True,
+                .ReadOnly = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .SortMode = DataGridViewColumnSortMode.NotSortable,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVCart.Columns.Add(editCol)
+        End If
+
+        If Not DGVCart.Columns.Contains(CartRemoveButtonName) Then
+            Dim removeCol As New DataGridViewButtonColumn() With {
+                .Name = CartRemoveButtonName,
+                .HeaderText = "",
+                .Text = "Remove",
+                .UseColumnTextForButtonValue = True,
+                .ReadOnly = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .SortMode = DataGridViewColumnSortMode.NotSortable,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVCart.Columns.Add(removeCol)
+        End If
+    End Sub
+
+    Private Sub RefreshCartAfterAction()
+        ApplyStandardGridLayout(DGVCart)
+        DGVCart.Refresh()
+        DGVCart.ClearSelection()
+        UpdateTotals()
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
@@ -299,40 +387,91 @@ Public Class Admin_Pos
         displayData("") ' 🔄 Refresh inventory grid for all
     End Sub
 
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub EditCartItemQuantity(deliveryProductID As Integer)
         Try
-            If DGVCart.SelectedRows.Count = 0 Then
-                MessageBox.Show("Please select a product to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            If dtPending Is Nothing Then Exit Sub
+
+            Dim matchedRows As DataRow() = dtPending.Select("DeliveryProductID = " & deliveryProductID.ToString())
+            If matchedRows.Length = 0 Then
+                MessageBox.Show("Selected cart item was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Exit Sub
             End If
 
-            Dim row As DataGridViewRow = DGVCart.SelectedRows(0)
-            Dim editForm As New add_pos()
-            editForm.IsEditMode = True
+            Dim cartRow As DataRow = matchedRows(0)
+            Dim currentQty As Integer = Convert.ToInt32(cartRow("Quantity"))
 
-            editForm.txtSearch.Text = row.Cells("BarcodeNumber").Value.ToString()
-            editForm.txtProductName.Text = row.Cells("ProductName").Value.ToString()
-            editForm.SelectedBarcode = row.Cells("BarcodeNumber").Value.ToString()
-            editForm.txtQuantity.Text = row.Cells("Quantity").Value.ToString()
-            editForm.SelectedSellingPrice = Convert.ToDecimal(row.Cells("SellingPrice").Value)
+            Dim inputQty As String = Microsoft.VisualBasic.Interaction.InputBox(
+                "Enter the new quantity for this item:",
+                "Edit Cart Quantity",
+                currentQty.ToString()
+            ).Trim()
 
-            ' Show Edit Form
-            If editForm.ShowDialog() = DialogResult.OK Then
-                ' Update DataGridView
-                row.Cells("Quantity").Value = editForm.SelectedQuantity
-                UpdateTotals()
-                MessageBox.Show("Product updated in cart.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            If String.IsNullOrWhiteSpace(inputQty) Then Exit Sub
+
+            Dim newQty As Integer
+            If Not Integer.TryParse(inputQty, newQty) OrElse newQty <= 0 Then
+                MessageBox.Show("Quantity must be a whole number greater than zero.", "Invalid Quantity", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Exit Sub
             End If
 
+            If newQty = currentQty Then Exit Sub
+
+            Dim qtyDelta As Integer = newQty - currentQty
+            Using conn As SqlConnection = DataAccess.GetConnection()
+                conn.Open()
+                Using txn As SqlTransaction = conn.BeginTransaction()
+                    Try
+                        If qtyDelta > 0 Then
+                            Dim availableStock As Integer = 0
+                            Using checkCmd As New SqlCommand("
+                                SELECT Quantity
+                                FROM tbl_Delivery_Products
+                                WHERE DeliveryProductID = @id", conn, txn)
+                                checkCmd.Parameters.AddWithValue("@id", deliveryProductID)
+                                Dim result As Object = checkCmd.ExecuteScalar()
+                                If result IsNot Nothing AndAlso Not IsDBNull(result) Then
+                                    availableStock = Convert.ToInt32(result)
+                                End If
+                            End Using
+
+                            If availableStock < qtyDelta Then
+                                Throw New Exception("Not enough stock available for the requested quantity.")
+                            End If
+
+                            Using deductCmd As New SqlCommand("
+                                UPDATE tbl_Delivery_Products
+                                SET Quantity = Quantity - @qty
+                                WHERE DeliveryProductID = @id", conn, txn)
+                                deductCmd.Parameters.AddWithValue("@qty", qtyDelta)
+                                deductCmd.Parameters.AddWithValue("@id", deliveryProductID)
+                                deductCmd.ExecuteNonQuery()
+                            End Using
+                        Else
+                            Dim restoreQty As Integer = Math.Abs(qtyDelta)
+                            Using restoreCmd As New SqlCommand("
+                                UPDATE tbl_Delivery_Products
+                                SET Quantity = Quantity + @qty
+                                WHERE DeliveryProductID = @id", conn, txn)
+                                restoreCmd.Parameters.AddWithValue("@qty", restoreQty)
+                                restoreCmd.Parameters.AddWithValue("@id", deliveryProductID)
+                                restoreCmd.ExecuteNonQuery()
+                            End Using
+                        End If
+
+                        txn.Commit()
+                    Catch
+                        txn.Rollback()
+                        Throw
+                    End Try
+                End Using
+            End Using
+
+            cartRow("Quantity") = newQty
+            RefreshCartAfterAction()
+            MessageBox.Show("Cart item updated successfully.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
         Catch ex As Exception
             MessageBox.Show("Error editing product: " & ex.Message, "Edit Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
-        txtCash.Text = ""
-        txtChange.Text = "0.00"
-        DGVCart.DataSource = dtPending
-        DGVCart.Refresh()
-        DGVCart.ClearSelection()
-        UpdateTotals()
     End Sub
 
     Private Sub LoadDiscounts()
@@ -694,53 +833,76 @@ Public Class Admin_Pos
         End If
     End Sub
 
-    Private Sub btnRemove_Click(sender As Object, e As EventArgs) Handles btnRemove.Click
+    Private Sub RemoveCartItem(deliveryProductID As Integer)
         Try
-            If DGVCart.SelectedRows.Count = 0 Then
-                MessageBox.Show("Please select at least one product to remove.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            If dtPending Is Nothing Then Exit Sub
+
+            Dim matchedRows As DataRow() = dtPending.Select("DeliveryProductID = " & deliveryProductID.ToString())
+            If matchedRows.Length = 0 Then
+                MessageBox.Show("Selected cart item was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Exit Sub
             End If
 
+            Dim rowToRemove As DataRow = matchedRows(0)
+            Dim qtyToRestore As Integer = Convert.ToInt32(rowToRemove("Quantity"))
+
             Dim confirmDelete As DialogResult = MessageBox.Show(
-            "Are you sure you want to remove the selected product(s)?",
-            "Confirm Removal",
-            MessageBoxButtons.YesNo,
-            MessageBoxIcon.Question
-        )
+                "Are you sure you want to remove this item from cart?",
+                "Confirm Removal",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            )
 
             If confirmDelete = DialogResult.Yes Then
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
 
-                    For Each row As DataGridViewRow In DGVCart.SelectedRows
-                        Dim deliveryProductID As Integer = Convert.ToInt32(row.Cells("DeliveryProductID").Value)
-                        Dim qtyToRestore As Integer = Convert.ToInt32(row.Cells("Quantity").Value)
-
-                        ' ✅ Restore stock to inventory
-                        Using cmd As New SqlCommand("
+                    Using cmd As New SqlCommand("
                         UPDATE tbl_Delivery_Products
                         SET Quantity = Quantity + @qty
                         WHERE DeliveryProductID = @id", conn)
-                            cmd.Parameters.AddWithValue("@qty", qtyToRestore)
-                            cmd.Parameters.AddWithValue("@id", deliveryProductID)
-                            cmd.ExecuteNonQuery()
-                        End Using
-
-                        ' ✅ Remove from local cart
-                        Dim rowsToDelete = dtPending.Select("DeliveryProductID = " & deliveryProductID)
-                        For Each dr As DataRow In rowsToDelete
-                            dtPending.Rows.Remove(dr)
-                        Next
-                    Next
+                        cmd.Parameters.AddWithValue("@qty", qtyToRestore)
+                        cmd.Parameters.AddWithValue("@id", deliveryProductID)
+                        cmd.ExecuteNonQuery()
+                    End Using
                 End Using
 
-                UpdateTotals()
-                displayData("") ' 🔄 Refresh inventory for all
-                MessageBox.Show("Product(s) removed and stock restored!", "Removed", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                dtPending.Rows.Remove(rowToRemove)
+                RefreshCartAfterAction()
+                displayData("")
+                MessageBox.Show("Product removed and stock restored.", "Removed", MessageBoxButtons.OK, MessageBoxIcon.Information)
             End If
         Catch ex As Exception
             MessageBox.Show("Error removing product: " & ex.Message, "Remove Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub DGVCart_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVCart.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim clickedColName As String = DGVCart.Columns(e.ColumnIndex).Name
+        If Not String.Equals(clickedColName, CartEditButtonName, StringComparison.Ordinal) AndAlso
+           Not String.Equals(clickedColName, CartRemoveButtonName, StringComparison.Ordinal) Then
+            Exit Sub
+        End If
+
+        If Not DGVCart.Columns.Contains("DeliveryProductID") Then
+            MessageBox.Show("Unable to locate row ID for this cart item.", "Missing ID", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        Dim idValue As Object = DGVCart.Rows(e.RowIndex).Cells("DeliveryProductID").Value
+        Dim deliveryProductID As Integer
+        If idValue Is Nothing OrElse Not Integer.TryParse(idValue.ToString(), deliveryProductID) Then
+            MessageBox.Show("Invalid row ID. Please refresh and try again.", "Invalid ID", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        If String.Equals(clickedColName, CartEditButtonName, StringComparison.Ordinal) Then
+            EditCartItemQuantity(deliveryProductID)
+        ElseIf String.Equals(clickedColName, CartRemoveButtonName, StringComparison.Ordinal) Then
+            RemoveCartItem(deliveryProductID)
+        End If
     End Sub
 
 
@@ -984,14 +1146,7 @@ Public Class Admin_Pos
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -1051,14 +1206,7 @@ Public Class Admin_Pos
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -1072,3 +1220,4 @@ Public Class Admin_Pos
 
 
 End Class
+

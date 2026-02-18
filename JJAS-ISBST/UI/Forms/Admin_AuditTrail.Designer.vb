@@ -223,6 +223,7 @@ Partial Class Admin_AuditTrail
         DataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVdeliveries.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
+        Me.DGVdeliveries.RowHeadersVisible = False
         DataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVdeliveries.RowsDefaultCellStyle = DataGridViewCellStyle3
@@ -449,3 +450,4 @@ Partial Class Admin_AuditTrail
     Friend WithEvents Panelmenu As Panel
     Friend WithEvents switchtimer As Timer
 End Class
+

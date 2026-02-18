@@ -97,6 +97,7 @@ Public Class Admin_transaction
         End With
 
         DGVTransacopn.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVTransacopn)
             DGVTransacopn.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading transaction: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -342,14 +343,7 @@ Public Class Admin_transaction
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -401,14 +395,7 @@ Public Class Admin_transaction
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -418,3 +405,4 @@ Public Class Admin_transaction
         Me.Close()
     End Sub
 End Class
+

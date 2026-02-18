@@ -299,6 +299,7 @@ Partial Class Admin_transaction
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVTransacopn.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVTransacopn.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        Me.DGVTransacopn.RowHeadersVisible = False
         DataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVTransacopn.RowsDefaultCellStyle = DataGridViewCellStyle3
@@ -479,3 +480,4 @@ Partial Class Admin_transaction
     Friend WithEvents btnAuditTrail As Button
     Friend WithEvents DGVTransacopn As DataGridView
 End Class
+

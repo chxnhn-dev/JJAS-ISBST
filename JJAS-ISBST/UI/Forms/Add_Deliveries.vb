@@ -14,13 +14,18 @@ Imports JJAS_ISBST.Login
 ' End Class
 
 Public Class Add_Deliveries
+    Private Const ColGridEdit As String = "colGridEdit"
+    Private Const ColGridDelete As String = "colGridDelete"
+    Private Const ColTempRowId As String = "TempRowID"
     Public Property deliveriesid As Integer = -1
     Private dtPending As DataTable
     Private _isLoading As Boolean = False
+    Private _nextTempRowId As Integer = 1
 
     Private Sub EnsureDtPending()
         If dtPending Is Nothing Then
             dtPending = New DataTable()
+            dtPending.Columns.Add(ColTempRowId, GetType(Integer))
             dtPending.Columns.Add("ProductID", GetType(Integer))
             dtPending.Columns.Add("BarcodeNumber", GetType(String))
             dtPending.Columns.Add("Product", GetType(String))
@@ -30,6 +35,118 @@ Public Class Add_Deliveries
             dtPending.Columns.Add("ImagePath", GetType(String))
             dtPending.Columns.Add("ProductImage", GetType(Image))
         End If
+    End Sub
+
+    Private Function GetNextTempRowId() As Integer
+        Dim currentId As Integer = _nextTempRowId
+        _nextTempRowId += 1
+        Return currentId
+    End Function
+
+    Private Function LoadImageFromPath(imagePath As String) As Image
+        If String.IsNullOrWhiteSpace(imagePath) OrElse Not IO.File.Exists(imagePath) Then
+            Return Nothing
+        End If
+
+        Using tempImg As Image = Image.FromFile(imagePath)
+            Return New Bitmap(tempImg)
+        End Using
+    End Function
+
+    Private Sub EnsureActionColumns()
+        If Not DGVdeliveries.Columns.Contains(ColGridEdit) Then
+            Dim editCol As New DataGridViewButtonColumn() With {
+                .Name = ColGridEdit,
+                .HeaderText = "Edit",
+                .Text = "Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVdeliveries.Columns.Add(editCol)
+        End If
+
+        If Not DGVdeliveries.Columns.Contains(ColGridDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColGridDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVdeliveries.Columns.Add(deleteCol)
+        End If
+    End Sub
+
+    Private Function FindPendingRowByTempId(tempRowId As Integer) As DataRow
+        EnsureDtPending()
+        Dim foundRows() As DataRow = dtPending.Select(ColTempRowId & " = " & tempRowId.ToString())
+        If foundRows.Length = 0 Then Return Nothing
+        Return foundRows(0)
+    End Function
+
+    Private Sub EditPendingRowByTempId(tempRowId As Integer)
+        Dim rowToEdit As DataRow = FindPendingRowByTempId(tempRowId)
+        If rowToEdit Is Nothing Then
+            MessageBox.Show("Unable to find product in the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+
+        Dim productId As Integer = Convert.ToInt32(rowToEdit("ProductID"))
+        Dim f As New Add_Product_Deliveries With {
+            .ProductID = productId,
+            .SelectedQuantity = Convert.ToInt32(rowToEdit("Quantity")),
+            .SelectedCostPrice = Convert.ToDecimal(rowToEdit("CostPrice")),
+            .SelectedSellingPrice = Convert.ToDecimal(rowToEdit("SellingPrice"))
+        }
+
+        If f.ShowDialog() <> DialogResult.OK Then Return
+
+        Dim duplicateRows() As DataRow = dtPending.Select(
+            "ProductID = " & f.selectedID.ToString() & " AND " & ColTempRowId & " <> " & tempRowId.ToString())
+
+        If duplicateRows.Length > 0 Then
+            duplicateRows(0)("Quantity") = Convert.ToInt32(duplicateRows(0)("Quantity")) + f.SelectedQuantity
+            duplicateRows(0)("CostPrice") = f.SelectedCostPrice
+            duplicateRows(0)("SellingPrice") = f.SelectedSellingPrice
+            duplicateRows(0)("BarcodeNumber") = f.SelectedBarcode
+            duplicateRows(0)("Product") = f.SelectedProductName
+            duplicateRows(0)("ImagePath") = f.SelectedImagePath
+            duplicateRows(0)("ProductImage") = LoadImageFromPath(f.SelectedImagePath)
+            dtPending.Rows.Remove(rowToEdit)
+            MessageBox.Show("Product merged with an existing row and updated.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
+        Else
+            rowToEdit("ProductID") = f.selectedID
+            rowToEdit("BarcodeNumber") = f.SelectedBarcode
+            rowToEdit("Product") = f.SelectedProductName
+            rowToEdit("Quantity") = f.SelectedQuantity
+            rowToEdit("CostPrice") = f.SelectedCostPrice
+            rowToEdit("SellingPrice") = f.SelectedSellingPrice
+            rowToEdit("ImagePath") = f.SelectedImagePath
+            rowToEdit("ProductImage") = LoadImageFromPath(f.SelectedImagePath)
+        End If
+
+        displayData()
+        DGVdeliveries.ClearSelection()
+    End Sub
+
+    Private Sub DeletePendingRowByTempId(tempRowId As Integer)
+        Dim rowToDelete As DataRow = FindPendingRowByTempId(tempRowId)
+        If rowToDelete Is Nothing Then
+            MessageBox.Show("Unable to find product in the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return
+        End If
+
+        If MessageBox.Show("Are you sure you want to remove this product from the list?", "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then
+            Return
+        End If
+
+        dtPending.Rows.Remove(rowToDelete)
+        displayData()
+        DGVdeliveries.ClearSelection()
     End Sub
 
     Private Sub displayData()
@@ -49,8 +166,10 @@ Public Class Add_Deliveries
 
         ' Bind to grid
         DGVdeliveries.DataSource = dtPending
+        EnsureActionColumns()
 
         ' Hide ProductID and ImagePath
+        If DGVdeliveries.Columns.Contains(ColTempRowId) Then DGVdeliveries.Columns(ColTempRowId).Visible = False
         If DGVdeliveries.Columns.Contains("ProductID") Then DGVdeliveries.Columns("ProductID").Visible = False
         If DGVdeliveries.Columns.Contains("ImagePath") Then DGVdeliveries.Columns("ImagePath").Visible = False
 
@@ -62,6 +181,15 @@ Public Class Add_Deliveries
         End If
 
         DGVdeliveries.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+        For Each col As DataGridViewColumn In DGVdeliveries.Columns
+            If col.Name = "ProductImage" OrElse col.Name = ColGridEdit OrElse col.Name = ColGridDelete Then
+                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
+            Else
+                col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+            End If
+        Next
+
+        ApplyStandardGridLayout(DGVdeliveries)
         DGVdeliveries.ClearSelection()
     End Sub
 
@@ -81,8 +209,10 @@ Public Class Add_Deliveries
 
             generateorderNumber()
             dtPending = Nothing
+            _nextTempRowId = 1
             EnsureDtPending()
             displayData()
+
 
             ' UI Polish: Add tooltips to clarify field requirements
             Dim tooltip As New ToolTip()
@@ -114,11 +244,7 @@ Public Class Add_Deliveries
     End Sub
 
     Private Sub DGVsize_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs) Handles DGVdeliveries.DataBindingComplete
-        ' Set row height
-        DGVdeliveries.RowTemplate.Height = 50
-        For Each rw As DataGridViewRow In DGVdeliveries.Rows
-            rw.Height = 50
-        Next
+        ApplyStandardGridLayout(DGVdeliveries)
 
         ' Set fonts
         DGVdeliveries.DefaultCellStyle.Font = New Font("Arial", 8, FontStyle.Regular)
@@ -129,6 +255,7 @@ Public Class Add_Deliveries
     Public Sub LoadDeliveryDetails(deliveryId As Integer)
         EnsureDtPending()
         dtPending.Clear()
+        _nextTempRowId = 1
 
         Using conn As SqlConnection = DataAccess.GetConnection()
             conn.Open()
@@ -184,6 +311,7 @@ Public Class Add_Deliveries
                 dtPending.Clear()
                 For Each r As DataRow In dt.Rows
                     Dim nr As DataRow = dtPending.NewRow()
+                    nr(ColTempRowId) = GetNextTempRowId()
                     nr("ProductID") = r("ProductID")
                     nr("BarcodeNumber") = r("BarcodeNumber")
                     nr("Product") = r("Product")
@@ -241,12 +369,7 @@ Public Class Add_Deliveries
         Dim f As New Add_Product_Deliveries
         If f.ShowDialog() = DialogResult.OK Then
             Dim imgPath As String = f.SelectedImagePath
-            Dim productImage As Image = Nothing
-            If Not String.IsNullOrEmpty(imgPath) AndAlso IO.File.Exists(imgPath) Then
-                Using tempImg As Image = Image.FromFile(imgPath)
-                    productImage = New Bitmap(tempImg)
-                End Using
-            End If
+            Dim productImage As Image = LoadImageFromPath(imgPath)
 
             ' check if product already exists in dtPending
             Dim existingRows() As DataRow = dtPending.Select("ProductID = " & f.selectedID.ToString())
@@ -254,10 +377,12 @@ Public Class Add_Deliveries
                 ' ✅ Increase quantity and update cost price
                 existingRows(0)("Quantity") = Convert.ToInt32(existingRows(0)("Quantity")) + f.SelectedQuantity
                 existingRows(0)("CostPrice") = f.SelectedCostPrice
+                existingRows(0)("SellingPrice") = f.SelectedSellingPrice
                 MessageBox.Show("Product already exists — quantity updated.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Else
                 ' ✅ Add new product
-                dtPending.Rows.Add(f.selectedID,
+                dtPending.Rows.Add(GetNextTempRowId(),
+                               f.selectedID,
                                f.SelectedBarcode,
                                f.SelectedProductName,
                                f.SelectedQuantity,
@@ -272,36 +397,25 @@ Public Class Add_Deliveries
             DGVdeliveries.ClearSelection()
         End If
     End Sub
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
-        If DGVdeliveries.SelectedRows.Count = 0 Then
-            MessageBox.Show("Please select a product to edit.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
+
+    Private Sub DGVdeliveries_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVdeliveries.CellContentClick
+        If e.RowIndex < 0 Then Exit Sub
+        If e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVdeliveries.Columns(e.ColumnIndex).Name
+        If colName <> ColGridEdit AndAlso colName <> ColGridDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVdeliveries.Rows(e.RowIndex)
+        If Not DGVdeliveries.Columns.Contains(ColTempRowId) OrElse row.Cells(ColTempRowId).Value Is Nothing Then
+            MessageBox.Show("Unable to identify selected row.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Exit Sub
         End If
 
-        Dim selectedRow As DataGridViewRow = DGVdeliveries.SelectedRows(0)
-        Dim productId As Integer = Convert.ToInt32(selectedRow.Cells("ProductID").Value)
-
-        ' Find row in DataTable
-        Dim rowToEdit As DataRow = dtPending.Select("ProductID = " & productId.ToString()).FirstOrDefault()
-        If rowToEdit Is Nothing Then
-            MessageBox.Show("Unable to find product in the list.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-            Return
-        End If
-
-        ' Open the same Add_Product_Deliveries form but pre-filled
-        Dim f As New Edit_Product_Deleveries
-        f.selectedProductID = productId
-        f.SelectedQuantity = Convert.ToInt32(rowToEdit("Quantity"))
-        f.SelectedCostPrice = Convert.ToDecimal(rowToEdit("CostPrice"))
-
-        If f.ShowDialog() = DialogResult.OK Then
-            ' Update the selected row with new values
-            rowToEdit("Quantity") = f.SelectedQuantity
-            rowToEdit("CostPrice") = f.SelectedCostPrice
-
-            displayData()
-            DGVdeliveries.ClearSelection()
-
+        Dim tempRowId As Integer = Convert.ToInt32(row.Cells(ColTempRowId).Value)
+        If colName = ColGridEdit Then
+            EditPendingRowByTempId(tempRowId)
+        ElseIf colName = ColGridDelete Then
+            DeletePendingRowByTempId(tempRowId)
         End If
     End Sub
 
@@ -371,3 +485,5 @@ Public Class Add_Deliveries
         Me.Close()
     End Sub
 End Class
+
+

@@ -4,7 +4,10 @@ Imports JJAS_ISBST.Login
 Imports Microsoft.VisualBasic.ApplicationServices
 
 Public Class Admin_Size
-    Dim selectedid As String = -1
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColSizeId As String = "SizeID"
+    Dim selectedid As Integer = -1
     Dim formtoshow As Form
 
     Private Sub Admin_Size_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -42,31 +45,61 @@ Public Class Admin_Size
     Private Sub displayData(Searchtext As String)
         Try
             Dim dt As New DataTable()
-        Dim sql As String = "
+            Dim sql As String = "
                 SELECT SizeID, 
                        Size,
                        Description
                 FROM tbl_Size WHERE IsActive = 1 AND (@Search = '' or Size LIKE @search)"
 
-        Using conn As SqlConnection = DataAccess.GetConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                Dim searchValue As String = "%" & Searchtext & "%"
-                cmd.Parameters.AddWithValue("@search", searchValue)
-                Dim da As New SqlDataAdapter(cmd)
-                da.Fill(dt)
+            Using conn As SqlConnection = DataAccess.GetConnection()
+                Using cmd As New SqlCommand(sql, conn)
+                    Dim searchValue As String = "%" & Searchtext & "%"
+                    cmd.Parameters.AddWithValue("@search", searchValue)
+                    Dim da As New SqlDataAdapter(cmd)
+                    da.Fill(dt)
+                End Using
             End Using
-        End Using
 
-        DGVsize.DataSource = dt
+            DGVsize.DataSource = dt
 
-        If DGVsize.Columns.Contains("SizeID") Then
-            DGVsize.Columns("SizeID").Visible = False
-        End If
-        DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            If DGVsize.Columns.Contains("SizeID") Then
+                DGVsize.Columns("SizeID").Visible = False
+            End If
+            EnsureActionColumns()
+            DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVsize)
             DGVsize.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading size: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVsize.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(viewCol)
+        End If
+
+        If Not DGVsize.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(deleteCol)
+        End If
     End Sub
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
         Dim f As New Add_Measurement()
@@ -75,31 +108,33 @@ Public Class Admin_Size
         End If
     End Sub
     Private Sub DGVSize_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellClick
-        If e.RowIndex >= 0 Then
-            Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
-            selectedid = row.Cells(0).Value.ToString()
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim sizeId As Integer
+        If TryGetSizeId(row, sizeId) Then
+            selectedid = sizeId
+        Else
+            selectedid = -1
         End If
     End Sub
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs)
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        Try
+        Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim sizeId As Integer
+        If Not TryGetSizeId(row, sizeId) Then
+            MessageBox.Show("Invalid Size ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
 
-            Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim f As New Add_Measurement With {
-                .SizeID = Convert.ToInt32(row.Cells(0).Value)
-            }
-
-            If f.ShowDialog() = DialogResult.OK Then
-                displayData("")
-            End If
-
-        Catch ex As Exception
-            MessageBox.Show("An error occurred while editing size: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        OpenEditModalById(sizeId)
     End Sub
     Private Sub txtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
         displayData(txtSearch.Text)
@@ -134,14 +169,32 @@ Public Class Admin_Size
             End Using
         End Using
     End Function
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs)
 
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        If Not DeleteValidation(selectedid) Then
+        DeleteById(Convert.ToInt32(selectedid))
+    End Sub
+
+    Private Sub OpenEditModalById(sizeId As Integer)
+        Try
+            Dim f As New Add_Measurement With {
+                .SizeID = sizeId
+            }
+
+            If f.ShowDialog() = DialogResult.OK Then
+                displayData("")
+            End If
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while editing size: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub DeleteById(sizeId As Integer)
+        If Not DeleteValidation(sizeId) Then
             MessageBox.Show("Cannot delete. Still Used in Product", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
             DGVsize.ClearSelection()
             Exit Sub
@@ -154,7 +207,7 @@ Public Class Admin_Size
                     conn.Open()
                     Dim sql As String = "Delete tbl_SIze WHERE SizeID = @SizeID"
                     Using cmd As New SqlCommand(sql, conn)
-                        cmd.Parameters.AddWithValue("@SizeID", selectedid)
+                        cmd.Parameters.AddWithValue("@SizeID", sizeId)
                         cmd.ExecuteNonQuery()
                     End Using
                 End Using
@@ -164,11 +217,41 @@ Public Class Admin_Size
 
                 displayData("")
                 DGVsize.ClearSelection()
+                selectedid = -1
             End If
         Catch ex As Exception
             MessageBox.Show("An error occurred while deleting size: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub DGVsize_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+        If Not DGVsize.Columns.Contains(ColViewEdit) OrElse Not DGVsize.Columns.Contains(ColDelete) Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim sizeId As Integer
+        If Not TryGetSizeId(row, sizeId) Then Exit Sub
+        selectedid = sizeId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(sizeId)
+        ElseIf colName = ColDelete Then
+            DeleteById(sizeId)
+        End If
+    End Sub
+
+    Private Function TryGetSizeId(row As DataGridViewRow, ByRef sizeId As Integer) As Boolean
+        sizeId = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColSizeId) Then Return False
+
+        Dim raw As Object = row.Cells(ColSizeId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), sizeId)
+    End Function
     Private Sub StartSwitchTimer()
         switchtimer.Interval = 1000
         switchtimer.Start()
@@ -183,27 +266,11 @@ Public Class Admin_Size
         formtoshow.Show()
         StartSwitchTimer()
     End Sub
-
-
-    Private Sub btnTrash_Click(sender As Object, e As EventArgs)
-        Dim f As New Trash_Size()
-        If f.ShowDialog() = DialogResult.OK Then
-            displayData("")
-        End If
-    End Sub
-
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -337,8 +404,9 @@ Public Class Admin_Size
         StartSwitchTimer()
     End Sub
 
-    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) 
         displayData("")
     End Sub
 
 End Class
+

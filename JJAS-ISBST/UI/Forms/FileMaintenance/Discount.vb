@@ -1,0 +1,166 @@
+Imports System.Data.SqlClient
+
+Namespace FileMaintenance
+    Public Class Discount
+        Inherits FileMaintenanceBaseForm
+
+        Private Const ColViewEdit As String = "colViewEdit"
+        Private Const ColDelete As String = "colDelete"
+        Private Const ColId As String = "DiscountID"
+
+        Private selectedId As Integer = -1
+
+        Protected Overrides ReadOnly Property CurrentMaintenanceTab As MaintenanceTab
+            Get
+                Return MaintenanceTab.DiscountTab
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property SearchCaption As String
+            Get
+                Return "Search Discount:"
+            End Get
+        End Property
+
+        Protected Overrides ReadOnly Property SearchPlaceholder As String
+            Get
+                Return "Senior"
+            End Get
+        End Property
+
+        Protected Overrides Sub HandlePrimaryAction()
+            Dim entryForm As New FrmDiscountEntry()
+            If entryForm.ShowDialog() = DialogResult.OK Then
+                ReloadData()
+            End If
+        End Sub
+
+        Protected Overrides Sub LoadTableData(searchText As String)
+            Dim dt As New DataTable()
+            Dim sql As String = "
+                SELECT DiscountID,
+                       DiscountName,
+                       DiscountValue,
+                       Description
+                FROM tbl_Discount
+                WHERE IsActive = 1
+                  AND (@search = '' OR DiscountName LIKE @search)
+                ORDER BY DiscountName"
+
+            Using conn As SqlConnection = DataAccess.GetConnection()
+                Using cmd As New SqlCommand(sql, conn)
+                    cmd.Parameters.AddWithValue("@search", "%" & searchText & "%")
+                    Using da As New SqlDataAdapter(cmd)
+                        da.Fill(dt)
+                    End Using
+                End Using
+            End Using
+
+            DGVtable.DataSource = dt
+            If DGVtable.Columns.Contains(ColId) Then
+                DGVtable.Columns(ColId).Visible = False
+            End If
+
+            EnsureActionColumns()
+            DGVtable.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyDefaultGridLayout()
+        End Sub
+
+        Private Sub EnsureActionColumns()
+            If Not DGVtable.Columns.Contains(ColViewEdit) Then
+                Dim viewCol As New DataGridViewButtonColumn() With {
+                    .Name = ColViewEdit,
+                    .HeaderText = "Action",
+                    .Text = "View/Edit",
+                    .UseColumnTextForButtonValue = True,
+                    .Width = 100,
+                    .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                    .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+                }
+                DGVtable.Columns.Add(viewCol)
+            End If
+
+            If Not DGVtable.Columns.Contains(ColDelete) Then
+                Dim deleteCol As New DataGridViewButtonColumn() With {
+                    .Name = ColDelete,
+                    .HeaderText = "Delete",
+                    .Text = "Delete",
+                    .UseColumnTextForButtonValue = True,
+                    .Width = 100,
+                    .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                    .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+                }
+                DGVtable.Columns.Add(deleteCol)
+            End If
+        End Sub
+
+        Private Sub OpenEditModalById(discountId As Integer)
+            Dim entryForm As New FrmDiscountEntry With {
+                .DiscountID = discountId
+            }
+
+            If entryForm.ShowDialog() = DialogResult.OK Then
+                ReloadData()
+            End If
+        End Sub
+
+        Private Sub DeleteById(discountId As Integer)
+            If MessageBox.Show("Are you sure you want to delete this discount?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then
+                Return
+            End If
+
+            Using conn As SqlConnection = DataAccess.GetConnection()
+                conn.Open()
+                Dim sql As String = "DELETE tbl_Discount WHERE DiscountID = @DiscountID"
+                Using cmd As New SqlCommand(sql, conn)
+                    cmd.Parameters.AddWithValue("@DiscountID", discountId)
+                    cmd.ExecuteNonQuery()
+                End Using
+            End Using
+
+            LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted Discount.")
+            ReloadData()
+        End Sub
+
+        Private Function TryGetId(row As DataGridViewRow, ByRef discountId As Integer) As Boolean
+            discountId = -1
+            If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColId) Then Return False
+
+            Dim raw As Object = row.Cells(ColId).Value
+            If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+            Return Integer.TryParse(raw.ToString(), discountId)
+        End Function
+
+        Private Sub DGVtable_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVtable.CellClick
+            If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+            Dim colName As String = DGVtable.Columns(e.ColumnIndex).Name
+            If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+            Dim row As DataGridViewRow = DGVtable.Rows(e.RowIndex)
+            If Not TryGetId(row, selectedId) Then
+                selectedId = -1
+            End If
+        End Sub
+
+        Private Sub DGVtable_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVtable.CellContentClick
+            If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+            Dim colName As String = DGVtable.Columns(e.ColumnIndex).Name
+            If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+            Dim row As DataGridViewRow = DGVtable.Rows(e.RowIndex)
+            Dim discountId As Integer
+            If Not TryGetId(row, discountId) Then Exit Sub
+
+            selectedId = discountId
+
+            If colName = ColViewEdit Then
+                OpenEditModalById(discountId)
+            ElseIf colName = ColDelete Then
+                DeleteById(discountId)
+            End If
+        End Sub
+    End Class
+End Namespace

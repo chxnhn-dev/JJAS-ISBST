@@ -2,6 +2,9 @@ Imports System.Data.SqlClient
 Imports JJAS_ISBST.Login
 Imports Microsoft.VisualBasic.ApplicationServices
 Public Class Admin_Brand
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColBrandId As String = "BrandID"
     Private selectedId As Integer = -1
     Dim formtoshow As Form
 
@@ -69,11 +72,41 @@ Public Class Admin_Brand
                 DGVsize.Columns("BrandID").Visible = False
             End If
 
+            EnsureActionColumns()
             DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVsize)
             DGVsize.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading brand: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVsize.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(viewCol)
+        End If
+
+        If Not DGVsize.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(deleteCol)
+        End If
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
@@ -84,9 +117,17 @@ Public Class Admin_Brand
     End Sub
 
     Private Sub DGVSize_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellClick
-        If e.RowIndex >= 0 Then
-            Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
-            selectedId = Convert.ToInt32(row.Cells(0).Value)
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim brandId As Integer
+        If TryGetBrandId(row, brandId) Then
+            selectedId = brandId
+        Else
+            selectedId = -1
         End If
     End Sub
 
@@ -95,19 +136,15 @@ Public Class Admin_Brand
             MessageBox.Show("Please select a row first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
-        Try
 
-            Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim f As New Add_Brand With {
-                .BrandID = Convert.ToInt32(row.Cells("BrandID").Value)
-            }
+        Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim brandId As Integer
+        If Not TryGetBrandId(row, brandId) Then
+            MessageBox.Show("Invalid Brand ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
 
-            If f.ShowDialog() = DialogResult.OK Then
-                displayData("")
-            End If
-        Catch ex As Exception
-            MessageBox.Show("An error occurred while editing brand: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        OpenEditModalById(brandId)
     End Sub
 
     Private Sub txtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
@@ -150,20 +187,37 @@ Public Class Admin_Brand
             Exit Sub
         End If
 
-        If Not DeleteValidation(selectedId) Then
+        DeleteById(selectedId)
+    End Sub
+
+    Private Sub OpenEditModalById(brandId As Integer)
+        Try
+            Dim f As New Add_Brand With {
+                .BrandID = brandId
+            }
+
+            If f.ShowDialog() = DialogResult.OK Then
+                displayData("")
+            End If
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while editing brand: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub DeleteById(brandId As Integer)
+        If Not DeleteValidation(brandId) Then
             MessageBox.Show("Cannot delete. Still used in Product", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
             DGVsize.ClearSelection()
             Exit Sub
         End If
 
         Try
-
             If MessageBox.Show("Are you sure you want to delete this brand?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
                     Dim sql As String = "Delete tbl_Brand WHERE BrandID = @BrandID"
                     Using cmd As New SqlCommand(sql, conn)
-                        cmd.Parameters.AddWithValue("@BrandID", selectedId)
+                        cmd.Parameters.AddWithValue("@BrandID", brandId)
                         cmd.ExecuteNonQuery()
                     End Using
                 End Using
@@ -174,11 +228,39 @@ Public Class Admin_Brand
                 DGVsize.ClearSelection()
                 selectedId = -1
             End If
-
         Catch ex As Exception
             MessageBox.Show("An error occurred while deleting brand: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub DGVsize_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+        If Not DGVsize.Columns.Contains(ColViewEdit) OrElse Not DGVsize.Columns.Contains(ColDelete) Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim brandId As Integer
+        If Not TryGetBrandId(row, brandId) Then Exit Sub
+        selectedId = brandId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(brandId)
+        ElseIf colName = ColDelete Then
+            DeleteById(brandId)
+        End If
+    End Sub
+
+    Private Function TryGetBrandId(row As DataGridViewRow, ByRef brandId As Integer) As Boolean
+        brandId = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColBrandId) Then Return False
+
+        Dim raw As Object = row.Cells(ColBrandId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), brandId)
+    End Function
     Private Sub StartSwitchTimer()
         switchtimer.Interval = 1000
         switchtimer.Start()
@@ -193,27 +275,11 @@ Public Class Admin_Brand
         formtoshow.Show()
         StartSwitchTimer()
     End Sub
-
-
-    Private Sub btnTrash_Click(sender As Object, e As EventArgs)
-        Dim f As New Trash_Brand()
-        If f.ShowDialog() = DialogResult.OK Then
-            displayData("")
-        End If
-    End Sub
-
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -302,14 +368,7 @@ Public Class Admin_Brand
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -356,3 +415,4 @@ Public Class Admin_Brand
         displayData("")
     End Sub
 End Class
+

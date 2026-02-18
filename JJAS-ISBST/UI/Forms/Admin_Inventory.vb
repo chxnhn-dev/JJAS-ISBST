@@ -173,6 +173,7 @@ Public Class Admin_Inventory
             End If
         Next
 
+            ApplyStandardGridLayout(DGVdeliveries)
             DGVdeliveries.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading inventory: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -180,11 +181,8 @@ Public Class Admin_Inventory
     End Sub
 
     ' Make grid easier to read
-    Private Sub DGVsize_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs)
-        DGVdeliveries.RowTemplate.Height = 50
-        For Each row As DataGridViewRow In DGVdeliveries.Rows
-            row.Height = 50
-        Next
+    Private Sub DGVsize_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs) Handles DGVdeliveries.DataBindingComplete
+        ApplyStandardGridLayout(DGVdeliveries)
 
         DGVdeliveries.DefaultCellStyle.Font = New Font("Arial", 8, FontStyle.Regular)
         DGVdeliveries.ColumnHeadersDefaultCellStyle.Font = New Font("Arial", 9, FontStyle.Bold)
@@ -401,14 +399,7 @@ Public Class Admin_Inventory
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -455,14 +446,7 @@ Public Class Admin_Inventory
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)

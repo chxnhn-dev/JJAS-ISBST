@@ -31,14 +31,11 @@ Partial Class Admin_Size
         Me.Label12 = New System.Windows.Forms.Label()
         Me.Button1 = New System.Windows.Forms.Button()
         Me.Panel3 = New System.Windows.Forms.Panel()
-        Me.btnRefresh = New System.Windows.Forms.Button()
         Me.DGVsize = New System.Windows.Forms.DataGridView()
         Me.lblPlaceholder = New System.Windows.Forms.Label()
         Me.txtSearch = New System.Windows.Forms.TextBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
-        Me.btnDelete = New System.Windows.Forms.Button()
         Me.btnAdd = New System.Windows.Forms.Button()
-        Me.btnEdit = New System.Windows.Forms.Button()
         Me.Panel7 = New System.Windows.Forms.Panel()
         Me.btnVat = New System.Windows.Forms.Button()
         Me.btnDiscount = New System.Windows.Forms.Button()
@@ -114,35 +111,15 @@ Partial Class Admin_Size
         'Panel3
         '
         Me.Panel3.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.Panel3.Controls.Add(Me.btnRefresh)
         Me.Panel3.Controls.Add(Me.DGVsize)
         Me.Panel3.Controls.Add(Me.lblPlaceholder)
         Me.Panel3.Controls.Add(Me.txtSearch)
         Me.Panel3.Controls.Add(Me.Panel2)
-        Me.Panel3.Controls.Add(Me.btnDelete)
         Me.Panel3.Controls.Add(Me.btnAdd)
-        Me.Panel3.Controls.Add(Me.btnEdit)
         Me.Panel3.Location = New System.Drawing.Point(358, 49)
         Me.Panel3.Name = "Panel3"
         Me.Panel3.Size = New System.Drawing.Size(1236, 839)
         Me.Panel3.TabIndex = 80
-        '
-        'btnRefresh
-        '
-        Me.btnRefresh.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnRefresh.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnRefresh.FlatAppearance.BorderSize = 0
-        Me.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnRefresh.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnRefresh.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnRefresh.Image = CType(resources.GetObject("btnRefresh.Image"), System.Drawing.Image)
-        Me.btnRefresh.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft
-        Me.btnRefresh.Location = New System.Drawing.Point(294, 27)
-        Me.btnRefresh.Name = "btnRefresh"
-        Me.btnRefresh.Size = New System.Drawing.Size(93, 43)
-        Me.btnRefresh.TabIndex = 107
-        Me.btnRefresh.Text = "       Refresh"
-        Me.btnRefresh.UseVisualStyleBackColor = False
         '
         'DGVsize
         '
@@ -172,6 +149,7 @@ Partial Class Admin_Size
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVsize.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVsize.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        Me.DGVsize.RowHeadersVisible = False
         DataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVsize.RowsDefaultCellStyle = DataGridViewCellStyle3
@@ -216,26 +194,6 @@ Partial Class Admin_Size
         Me.Panel2.Size = New System.Drawing.Size(357, 1)
         Me.Panel2.TabIndex = 42
         '
-        'btnDelete
-        '
-        Me.btnDelete.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelete.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnDelete.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelete.FlatAppearance.BorderSize = 0
-        Me.btnDelete.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelete.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelete.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnDelete.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnDelete.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnDelete.Image = CType(resources.GetObject("btnDelete.Image"), System.Drawing.Image)
-        Me.btnDelete.Location = New System.Drawing.Point(174, 30)
-        Me.btnDelete.Name = "btnDelete"
-        Me.btnDelete.Size = New System.Drawing.Size(114, 37)
-        Me.btnDelete.TabIndex = 37
-        Me.btnDelete.Text = "  Delete"
-        Me.btnDelete.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnDelete.UseVisualStyleBackColor = False
-        '
         'btnAdd
         '
         Me.btnAdd.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
@@ -255,26 +213,6 @@ Partial Class Admin_Size
         Me.btnAdd.Text = "  Add"
         Me.btnAdd.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
         Me.btnAdd.UseVisualStyleBackColor = False
-        '
-        'btnEdit
-        '
-        Me.btnEdit.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnEdit.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.FlatAppearance.BorderSize = 0
-        Me.btnEdit.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnEdit.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnEdit.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnEdit.Image = CType(resources.GetObject("btnEdit.Image"), System.Drawing.Image)
-        Me.btnEdit.Location = New System.Drawing.Point(93, 30)
-        Me.btnEdit.Name = "btnEdit"
-        Me.btnEdit.Size = New System.Drawing.Size(75, 37)
-        Me.btnEdit.TabIndex = 36
-        Me.btnEdit.Text = "  Edit"
-        Me.btnEdit.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnEdit.UseVisualStyleBackColor = False
         '
         'Panel7
         '
@@ -747,9 +685,7 @@ Partial Class Admin_Size
     Friend WithEvents Panel8 As Panel
     Friend WithEvents Label12 As Label
     Friend WithEvents Panel3 As Panel
-    Friend WithEvents btnDelete As Button
     Friend WithEvents btnAdd As Button
-    Friend WithEvents btnEdit As Button
     Friend WithEvents Panel7 As Panel
     Friend WithEvents btnDiscount As Button
     Friend WithEvents btnVat As Button
@@ -776,5 +712,5 @@ Partial Class Admin_Size
     Friend WithEvents Panel2 As Panel
     Friend WithEvents btnAuditTrail As Button
     Friend WithEvents DGVsize As DataGridView
-    Friend WithEvents btnRefresh As Button
 End Class
+

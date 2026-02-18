@@ -21,7 +21,7 @@ Public Class AuthService
         End Using
     End Function
 
-    Public Function Login(username As String, password As String) As LoginResult
+    Public Function FrmLogin(username As String, password As String) As LoginResult
         Dim result As New LoginResult() With {.Success = False}
 
         username = If(username, "").Trim()
@@ -96,20 +96,10 @@ Public Class AuthService
                             Dim lastName As String = rdr("LastName").ToString()
                             result.FullName = ($"{firstName} {lastName}").Trim()
                         Else
-                            result.ErrorMessage = "Login Failed. Invalid username or password."
+                            result.ErrorMessage = "FrmLogin Failed. Invalid username or password."
                         End If
                     End Using
                 End Using
-<<<<<<< HEAD
-=======
-
-                If result.Success Then
-                    Using updateCmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=1 WHERE UserID=@UserID", conn)
-                        updateCmd.Parameters.Add(New SqlParameter("@UserID", SqlDbType.Int) With {.Value = result.UserId})
-                        updateCmd.ExecuteNonQuery()
-                    End Using
-                End If
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
 
             Return result
@@ -122,20 +112,12 @@ Public Class AuthService
     End Function
 
     Public Sub LogoutUser(userId As Integer)
-<<<<<<< HEAD
         ' Kept for backward compatibility with existing UI.
         ' Proper logout uses SessionService.EndCurrentSession().
         Try
             SessionService.EndCurrentSession("Logout")
         Catch
             ' ignore
-=======
-        Try
-            Db.ExecuteNonQuery("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID",
-                               New SqlParameter("@UserID", SqlDbType.Int) With {.Value = userId})
-        Catch
-            ' ignore (UI can handle if needed)
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
         End Try
     End Sub
 

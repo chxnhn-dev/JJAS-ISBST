@@ -45,7 +45,7 @@ Public Class Edit_Product
         End If
 
     End Sub
-    Private Sub btnBrowse_Click(sender As Object, e As EventArgs)
+    Private Sub btnBrowse_Click(sender As Object, e As EventArgs) Handles btnBrowse.Click
         Using ofd As New OpenFileDialog
             ofd.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif"
 
@@ -112,7 +112,7 @@ Public Class Edit_Product
         cbo.ValueMember = valueMember
         cbo.SelectedIndex = 0
     End Sub
-    Private Sub txtSellingPrice_KeyPress(sender As Object, e As KeyPressEventArgs)
+    Private Sub txtSellingPrice_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtSellingPrice.KeyPress
 
         If Char.IsDigit(e.KeyChar) OrElse e.KeyChar = ControlChars.Back Then
 
@@ -130,7 +130,7 @@ Public Class Edit_Product
             e.Handled = True
         End If
     End Sub
-    Private Sub txtBarcodeNumber_keypress(sender As Object, e As KeyPressEventArgs)
+    Private Sub txtBarcodeNumber_keypress(sender As Object, e As KeyPressEventArgs) Handles txtBarcodeNumber.keypress
         If Not Char.IsDigit(e.KeyChar) AndAlso e.KeyChar <> ControlChars.Back Then
             e.Handled = True
         End If
@@ -238,7 +238,7 @@ Public Class Edit_Product
         Me.Close()
     End Sub
 
-    Private Sub Panel1_Paint(sender As Object, e As PaintEventArgs)
+    Private Sub Panel1_Paint(sender As Object, e As PaintEventArgs) Handles Panel1.Paint
 
     End Sub
 End Class

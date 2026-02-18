@@ -396,6 +396,7 @@ Partial Class Admin_Vat
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVsize.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVsize.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        Me.DGVsize.RowHeadersVisible = False
         DataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVsize.RowsDefaultCellStyle = DataGridViewCellStyle3
@@ -685,3 +686,4 @@ Partial Class Admin_Vat
     Friend WithEvents DGVsize As DataGridView
     Friend WithEvents btnRefresh As Button
 End Class
+

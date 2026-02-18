@@ -36,6 +36,8 @@ Partial Class Add_Product_Deliveries
         Me.Label5 = New System.Windows.Forms.Label()
         Me.Label2 = New System.Windows.Forms.Label()
         Me.txtCostPrice = New System.Windows.Forms.TextBox()
+        Me.Label6 = New System.Windows.Forms.Label()
+        Me.txtSellingPrice = New System.Windows.Forms.TextBox()
         Me.btnAdd = New System.Windows.Forms.Button()
         Me.Panel8.SuspendLayout()
         Me.SuspendLayout()
@@ -201,6 +203,27 @@ Partial Class Add_Product_Deliveries
         Me.txtCostPrice.Size = New System.Drawing.Size(126, 29)
         Me.txtCostPrice.TabIndex = 129
         '
+        'Label6
+        '
+        Me.Label6.AutoSize = True
+        Me.Label6.BackColor = System.Drawing.Color.Transparent
+        Me.Label6.Font = New System.Drawing.Font("Segoe UI", 14.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.Label6.ForeColor = System.Drawing.SystemColors.ButtonHighlight
+        Me.Label6.Location = New System.Drawing.Point(7, 232)
+        Me.Label6.Name = "Label6"
+        Me.Label6.Size = New System.Drawing.Size(126, 25)
+        Me.Label6.TabIndex = 131
+        Me.Label6.Text = "Selling Price:"
+        '
+        'txtSellingPrice
+        '
+        Me.txtSellingPrice.Font = New System.Drawing.Font("Microsoft Sans Serif", 14.25!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.txtSellingPrice.Location = New System.Drawing.Point(12, 260)
+        Me.txtSellingPrice.MaxLength = 20
+        Me.txtSellingPrice.Name = "txtSellingPrice"
+        Me.txtSellingPrice.Size = New System.Drawing.Size(262, 29)
+        Me.txtSellingPrice.TabIndex = 132
+        '
         'btnAdd
         '
         Me.btnAdd.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
@@ -213,7 +236,7 @@ Partial Class Add_Product_Deliveries
         Me.btnAdd.Font = New System.Drawing.Font("Segoe UI", 12.0!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.btnAdd.ForeColor = System.Drawing.SystemColors.ButtonHighlight
         Me.btnAdd.Image = CType(resources.GetObject("btnAdd.Image"), System.Drawing.Image)
-        Me.btnAdd.Location = New System.Drawing.Point(190, 241)
+        Me.btnAdd.Location = New System.Drawing.Point(190, 295)
         Me.btnAdd.Name = "btnAdd"
         Me.btnAdd.Size = New System.Drawing.Size(84, 37)
         Me.btnAdd.TabIndex = 130
@@ -226,8 +249,10 @@ Partial Class Add_Product_Deliveries
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(31, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.ClientSize = New System.Drawing.Size(282, 290)
+        Me.ClientSize = New System.Drawing.Size(282, 346)
         Me.Controls.Add(Me.btnAdd)
+        Me.Controls.Add(Me.txtSellingPrice)
+        Me.Controls.Add(Me.Label6)
         Me.Controls.Add(Me.txtCostPrice)
         Me.Controls.Add(Me.Label2)
         Me.Controls.Add(Me.txtQuantity)
@@ -262,5 +287,7 @@ Partial Class Add_Product_Deliveries
     Friend WithEvents Label5 As Label
     Friend WithEvents Label2 As Label
     Friend WithEvents txtCostPrice As TextBox
+    Friend WithEvents Label6 As Label
+    Friend WithEvents txtSellingPrice As TextBox
     Friend WithEvents btnAdd As Button
 End Class

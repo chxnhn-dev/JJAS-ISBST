@@ -15,21 +15,6 @@ Public Class Login
     Private Sub Login_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Me.KeyPreview = True
         Try
-<<<<<<< HEAD
-=======
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-        Catch ex As Exception
-            MsgBox("Error logging out: " & ex.Message)
-        End Try
-
-        Try
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             Using conn = DataAccess.GetConnection()
                 Using cmd As New SqlCommand("SELECT COUNT(1) FROM Admins", conn)
                     conn.Open()
@@ -89,14 +74,11 @@ Public Class Login
     CurrentUser.FullName = res.FullName
     CurrentUser.Role = res.Role.ToLower()
 
-<<<<<<< HEAD
     ' ✅ Create a DB-backed session (tbl_AppSession). IsActive remains account status.
     Dim principalType As String = If(CurrentUser.Role = "admin", "admin", "user")
     SessionService.CreateSession(principalType, CurrentUser.UserID, CurrentUser.Username, CurrentUser.FullName, CurrentUser.Role)
 
 
-=======
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
     ' ✅ audit trail
     Try
         LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User logged in.")

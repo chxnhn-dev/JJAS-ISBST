@@ -2,6 +2,9 @@ Imports System.Data.SqlClient
 Imports JJAS_ISBST.Login
 
 Public Class Admin_Discount
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColDiscountId As String = "DiscountID"
     Private selectedId As Integer = -1
     Dim formtoshow As Form
     Private Sub Admin_Discount_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -33,11 +36,41 @@ Public Class Admin_Discount
                 DGVsize.Columns("DiscountID").Visible = False
             End If
 
+            EnsureActionColumns()
             DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVsize)
             DGVsize.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading discount: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVsize.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(viewCol)
+        End If
+
+        If Not DGVsize.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(deleteCol)
+        End If
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
@@ -47,9 +80,17 @@ Public Class Admin_Discount
         End If
     End Sub
     Private Sub DGVSize_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellClick
-        If e.RowIndex >= 0 Then
-            Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
-            selectedId = row.Cells(0).Value.ToString()
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim discountId As Integer
+        If TryGetDiscountId(row, discountId) Then
+            selectedId = discountId
+        Else
+            selectedId = -1
         End If
     End Sub
     Private Sub txtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
@@ -73,17 +114,35 @@ Public Class Admin_Discount
     Private Sub lblPlaceholder_Click(sender As Object, e As EventArgs) Handles lblPlaceholder.Click
         txtSearch.Focus()
     End Sub
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs) 
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        Try
+        Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim discountId As Integer
+        If Not TryGetDiscountId(row, discountId) Then
+            MessageBox.Show("Invalid Discount ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
 
-            Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        OpenEditModalById(discountId)
+    End Sub
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs) 
+
+        If DGVsize.SelectedRows.Count = 0 Then
+            MessageBox.Show("Please select a row to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        DeleteById(selectedId)
+    End Sub
+
+    Private Sub OpenEditModalById(discountId As Integer)
+        Try
             Dim f As New Add_Discount With {
-                .DiscountID = Convert.ToInt32(row.Cells("DiscountID").Value)
+                .DiscountID = discountId
             }
 
             If f.ShowDialog() = DialogResult.OK Then
@@ -93,20 +152,15 @@ Public Class Admin_Discount
             MessageBox.Show("An error occurred while editing Discount: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
 
-        If DGVsize.SelectedRows.Count = 0 Then
-            MessageBox.Show("Please select a row to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Exit Sub
-        End If
+    Private Sub DeleteById(discountId As Integer)
         Try
-
             If MessageBox.Show("Are you sure you want to delete this row?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
                     Dim sql As String = "Delete tbl_Discount WHERE DiscountID = @DiscountID"
                     Using cmd As New SqlCommand(sql, conn)
-                        cmd.Parameters.AddWithValue("@DiscountID", selectedId)
+                        cmd.Parameters.AddWithValue("@DiscountID", discountId)
                         cmd.ExecuteNonQuery()
                     End Using
                 End Using
@@ -117,19 +171,42 @@ Public Class Admin_Discount
 
                 displayData("")
                 DGVsize.ClearSelection()
+                selectedId = -1
             End If
 
         Catch ex As Exception
             MessageBox.Show("An error occurred while deleting discount: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
-    Private Sub btnTrash_Click(sender As Object, e As EventArgs)
-        Dim f As New Trash_Discount()
-        If f.ShowDialog() = DialogResult.OK Then
-            displayData("")
+
+    Private Sub DGVsize_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+        If Not DGVsize.Columns.Contains(ColViewEdit) OrElse Not DGVsize.Columns.Contains(ColDelete) Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim discountId As Integer
+        If Not TryGetDiscountId(row, discountId) Then Exit Sub
+        selectedId = discountId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(discountId)
+        ElseIf colName = ColDelete Then
+            DeleteById(discountId)
         End If
     End Sub
 
+    Private Function TryGetDiscountId(row As DataGridViewRow, ByRef discountId As Integer) As Boolean
+        discountId = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColDiscountId) Then Return False
+
+        Dim raw As Object = row.Cells(ColDiscountId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), discountId)
+    End Function
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Me.DialogResult = DialogResult.OK
         Me.Close()
@@ -254,7 +331,7 @@ Public Class Admin_Discount
         StartSwitchTimer()
     End Sub
 
-    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) 
         displayData("")
     End Sub
 End Class

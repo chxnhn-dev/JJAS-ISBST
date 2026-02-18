@@ -100,6 +100,7 @@ Partial Class Admin_Inventory
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVdeliveries.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVdeliveries.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        Me.DGVdeliveries.RowHeadersVisible = False
         DataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVdeliveries.RowsDefaultCellStyle = DataGridViewCellStyle3
@@ -480,3 +481,4 @@ Partial Class Admin_Inventory
     Friend WithEvents btnAuditTrail As Button
     Friend WithEvents DGVdeliveries As DataGridView
 End Class
+

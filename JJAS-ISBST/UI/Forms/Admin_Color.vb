@@ -2,6 +2,9 @@ Imports System.Data.SqlClient
 Imports JJAS_ISBST.Login
 Imports Microsoft.VisualBasic.ApplicationServices
 Public Class Admin_Color
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColColorId As String = "COlorID"
     Private selectedId As Integer = -1
     Dim formtoshow As Form
     Private Sub Admin_Color_Load(sender As Object, e As EventArgs) Handles MyBase.Load
@@ -13,8 +16,7 @@ Public Class Admin_Color
         tooltip.SetToolTip(txtSearch, "Search by Category.")
         tooltip.SetToolTip(lblPlaceholder, "Search by Category.")
         tooltip.SetToolTip(btnAdd, "Add a new Category.")
-        tooltip.SetToolTip(btnEdit, "Edit the selected Category.")
-        tooltip.SetToolTip(btnDelete, "Deactivate the selected Category.")
+
 
 
         Select Case Login.CurrentUser.Role.ToLower()
@@ -71,11 +73,41 @@ Public Class Admin_Color
                 DGVsize.Columns("COlorID").Visible = False
             End If
 
+            EnsureActionColumns()
             DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVsize)
             DGVsize.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading color: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVsize.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(viewCol)
+        End If
+
+        If Not DGVsize.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(deleteCol)
+        End If
     End Sub
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
         Dim f As New Add_Color()
@@ -84,30 +116,34 @@ Public Class Admin_Color
         End If
     End Sub
     Private Sub DGVSize_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellClick
-        If e.RowIndex >= 0 Then
-            Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
-            selectedId = row.Cells(0).Value.ToString()
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim colorId As Integer
+        If TryGetColorId(row, colorId) Then
+            selectedId = colorId
+        Else
+            selectedId = -1
         End If
     End Sub
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs)
 
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        Try
-            Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim f As New Add_Color With {
-                .ColorID = Convert.ToInt32(row.Cells(0).Value)
-            }
+        Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim colorId As Integer
+        If Not TryGetColorId(row, colorId) Then
+            MessageBox.Show("Invalid Color ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
 
-            If f.ShowDialog() = DialogResult.OK Then
-                displayData("")
-            End If
-        Catch ex As Exception
-            MessageBox.Show("An error occurred while editing color: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        OpenEditModalById(colorId)
     End Sub
     Private Sub txtSearch_TextChanged(sender As Object, e As EventArgs) Handles txtSearch.TextChanged
         displayData(txtSearch.Text)
@@ -142,14 +178,32 @@ Public Class Admin_Color
             End Using
         End Using
     End Function
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs)
 
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a row to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        If Not DeleteValidation(selectedId) Then
+        DeleteById(selectedId)
+    End Sub
+
+    Private Sub OpenEditModalById(colorId As Integer)
+        Try
+            Dim f As New Add_Color With {
+                .ColorID = colorId
+            }
+
+            If f.ShowDialog() = DialogResult.OK Then
+                displayData("")
+            End If
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while editing color: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub DeleteById(colorId As Integer)
+        If Not DeleteValidation(colorId) Then
             MessageBox.Show("This Color is still used in Products. Cannot delete.", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
             DGVsize.ClearSelection()
             Exit Sub
@@ -161,7 +215,7 @@ Public Class Admin_Color
                     conn.Open()
                     Dim sql As String = "Delete tbl_Color WHERE ColorID = @ColorID"
                     Using cmd As New SqlCommand(sql, conn)
-                        cmd.Parameters.AddWithValue("@ColorID", selectedId)
+                        cmd.Parameters.AddWithValue("@ColorID", colorId)
                         cmd.ExecuteNonQuery()
                     End Using
                 End Using
@@ -173,11 +227,41 @@ Public Class Admin_Color
 
                 displayData("")
                 DGVsize.ClearSelection()
+                selectedId = -1
             End If
         Catch ex As Exception
             MessageBox.Show("An error occurred while deleting color: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
+
+    Private Sub DGVsize_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+        If Not DGVsize.Columns.Contains(ColViewEdit) OrElse Not DGVsize.Columns.Contains(ColDelete) Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim colorId As Integer
+        If Not TryGetColorId(row, colorId) Then Exit Sub
+        selectedId = colorId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(colorId)
+        ElseIf colName = ColDelete Then
+            DeleteById(colorId)
+        End If
+    End Sub
+
+    Private Function TryGetColorId(row As DataGridViewRow, ByRef colorId As Integer) As Boolean
+        colorId = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColColorId) Then Return False
+
+        Dim raw As Object = row.Cells(ColColorId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), colorId)
+    End Function
     Private Sub StartSwitchTimer()
         switchtimer.Interval = 1000
         switchtimer.Start()
@@ -193,26 +277,11 @@ Public Class Admin_Color
         StartSwitchTimer()
     End Sub
 
-
-    Private Sub btnTrash_Click(sender As Object, e As EventArgs)
-        Dim f As New Trash_Color()
-        If f.ShowDialog() = DialogResult.OK Then
-            displayData("")
-        End If
-    End Sub
-
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -301,14 +370,7 @@ Public Class Admin_Color
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -352,7 +414,8 @@ Public Class Admin_Color
         StartSwitchTimer()
     End Sub
 
-    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+    Private Sub btnRefresh_Click(sender As Object, e As EventArgs)
         displayData("")
     End Sub
 End Class
+

@@ -42,11 +42,9 @@ Partial Class Admin_Pos
         Me.Button1 = New System.Windows.Forms.Button()
         Me.Panel3 = New System.Windows.Forms.Panel()
         Me.DGVCart = New System.Windows.Forms.DataGridView()
-        Me.btnEdit = New System.Windows.Forms.Button()
         Me.lblPlaceholder = New System.Windows.Forms.Label()
         Me.txtSearch = New System.Windows.Forms.TextBox()
         Me.Panel2 = New System.Windows.Forms.Panel()
-        Me.btnRemove = New System.Windows.Forms.Button()
         Me.btnAdd = New System.Windows.Forms.Button()
         Me.switchtimer = New System.Windows.Forms.Timer(Me.components)
         Me.Panel4 = New System.Windows.Forms.Panel()
@@ -344,11 +342,9 @@ Partial Class Admin_Pos
         '
         Me.Panel3.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
         Me.Panel3.Controls.Add(Me.DGVCart)
-        Me.Panel3.Controls.Add(Me.btnEdit)
         Me.Panel3.Controls.Add(Me.lblPlaceholder)
         Me.Panel3.Controls.Add(Me.txtSearch)
         Me.Panel3.Controls.Add(Me.Panel2)
-        Me.Panel3.Controls.Add(Me.btnRemove)
         Me.Panel3.Controls.Add(Me.btnAdd)
         Me.Panel3.Location = New System.Drawing.Point(188, 49)
         Me.Panel3.Name = "Panel3"
@@ -383,32 +379,13 @@ Partial Class Admin_Pos
         DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVCart.RowHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.DGVCart.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        Me.DGVCart.RowHeadersVisible = False
         DataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVCart.RowsDefaultCellStyle = DataGridViewCellStyle3
         Me.DGVCart.RowTemplate.Height = 50
         Me.DGVCart.Size = New System.Drawing.Size(1086, 725)
         Me.DGVCart.TabIndex = 73
-        '
-        'btnEdit
-        '
-        Me.btnEdit.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnEdit.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.FlatAppearance.BorderSize = 0
-        Me.btnEdit.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnEdit.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnEdit.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnEdit.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnEdit.Image = CType(resources.GetObject("btnEdit.Image"), System.Drawing.Image)
-        Me.btnEdit.Location = New System.Drawing.Point(93, 31)
-        Me.btnEdit.Name = "btnEdit"
-        Me.btnEdit.Size = New System.Drawing.Size(75, 37)
-        Me.btnEdit.TabIndex = 72
-        Me.btnEdit.Text = "  Edit"
-        Me.btnEdit.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnEdit.UseVisualStyleBackColor = False
         '
         'lblPlaceholder
         '
@@ -447,26 +424,6 @@ Partial Class Admin_Pos
         Me.Panel2.Name = "Panel2"
         Me.Panel2.Size = New System.Drawing.Size(357, 1)
         Me.Panel2.TabIndex = 48
-        '
-        'btnRemove
-        '
-        Me.btnRemove.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnRemove.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnRemove.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnRemove.FlatAppearance.BorderSize = 0
-        Me.btnRemove.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnRemove.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnRemove.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnRemove.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnRemove.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnRemove.Image = CType(resources.GetObject("btnRemove.Image"), System.Drawing.Image)
-        Me.btnRemove.Location = New System.Drawing.Point(174, 31)
-        Me.btnRemove.Name = "btnRemove"
-        Me.btnRemove.Size = New System.Drawing.Size(101, 37)
-        Me.btnRemove.TabIndex = 38
-        Me.btnRemove.Text = "  Void"
-        Me.btnRemove.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnRemove.UseVisualStyleBackColor = False
         '
         'btnAdd
         '
@@ -863,7 +820,6 @@ Partial Class Admin_Pos
     Friend WithEvents txtSubtotal As TextBox
     Friend WithEvents Label9 As Label
     Friend WithEvents btnPay As Button
-    Friend WithEvents btnRemove As Button
     Friend WithEvents btnNewTransaction As Button
     Friend WithEvents datetimer As Timer
     Friend WithEvents Label3 As Label
@@ -879,10 +835,10 @@ Partial Class Admin_Pos
     Friend WithEvents btnAuditTrail As Button
     Friend WithEvents txtVatRate As TextBox
     Friend WithEvents Label11 As Label
-    Friend WithEvents btnEdit As Button
     Friend WithEvents DGVCart As DataGridView
     Friend WithEvents txtVat As TextBox
     Friend WithEvents txtVatable As TextBox
     Friend WithEvents Label4 As Label
     Friend WithEvents Label1 As Label
 End Class
+

@@ -1,4 +1,4 @@
-﻿Imports System.Data.SqlClient
+Imports System.Data.SqlClient
 Imports JJAS_ISBST.Login
 
 Public Class Admin_Vat
@@ -23,6 +23,7 @@ Public Class Admin_Vat
             End If
             DGVsize.ClearSelection()
             DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVsize)
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading vat: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
@@ -143,7 +144,7 @@ Public Class Admin_Vat
                                                 MessageBoxIcon.Question)
 
         If confirm = DialogResult.Yes Then
-            ' 🧾 Log audit trail
+            ' ?? Log audit trail
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User Logged Out.")
 

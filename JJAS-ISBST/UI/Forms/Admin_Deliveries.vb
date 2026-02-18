@@ -4,6 +4,9 @@ Imports JJAS_ISBST.Login
 Imports System.Text
 
 Public Class Admin_Deliveries
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColPost As String = "colPost"
+    Private Const ColDelete As String = "colDelete"
     Private DeliveryID As Integer = -1
     Private DeliveryProductID As Integer = -1
     Dim formtoshow As Form
@@ -14,14 +17,12 @@ Public Class Admin_Deliveries
 
         Select Case Login.CurrentUser.Role?.ToLower()
             Case "staff"
-                btnPost.Visible = False
                 btnPos.Visible = False
                 btnTransaction.Visible = False
                 btnAuditTrail.Visible = False
 
                 btnAuditTrail.Image = Nothing
                 btnTransaction.Image = Nothing
-                btnPost.Image = Nothing
                 btnPos.Image = Nothing
         End Select
 
@@ -37,6 +38,10 @@ Public Class Admin_Deliveries
         Next
     End Sub
 
+    Private Function IsAdminUser() As Boolean
+        Return String.Equals(Login.CurrentUser.Role, "admin", StringComparison.OrdinalIgnoreCase)
+    End Function
+
     Private Sub LoadDeliveries(searchText As String)
         Dim dt As New DataTable()
         Dim sql As New StringBuilder()
@@ -49,6 +54,7 @@ Public Class Admin_Deliveries
         sql.AppendLine("       p.BarcodeNumber,")
         sql.AppendLine("       dp.Quantity,")
         sql.AppendLine("       dp.CostPrice,")
+        sql.AppendLine("       dp.Status,")
         sql.AppendLine("       p.SellingPrice,")
         sql.AppendLine("       p.ImagePath")
         sql.AppendLine("FROM tbl_delivery_products dp")
@@ -109,12 +115,15 @@ Public Class Admin_Deliveries
     End Sub
 
     Private Sub FormatDeliveriesGrid()
-        Dim hiddenCols() As String = {"ImagePath", "DeliveryProductID", "DeliveryID"}
+        Dim hiddenCols() As String = {"ImagePath", "DeliveryProductID", "DeliveryID", "Status"}
         For Each colName In hiddenCols
             If DGVdeliveries.Columns.Contains(colName) Then
                 DGVdeliveries.Columns(colName).Visible = False
             End If
         Next
+
+        EnsureActionColumns()
+        UpdatePostButtonStates()
 
         If DGVdeliveries.Columns.Contains("ProductImage") Then
             DGVdeliveries.Columns("ProductImage").DisplayIndex = 0
@@ -145,21 +154,80 @@ Public Class Admin_Deliveries
 
         DGVdeliveries.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
         For Each col As DataGridViewColumn In DGVdeliveries.Columns
-            If col.Name = "ProductImage" Then
+            If col.Name = "ProductImage" OrElse col.Name = ColViewEdit OrElse col.Name = ColPost OrElse col.Name = ColDelete Then
                 col.AutoSizeMode = DataGridViewAutoSizeColumnMode.None
             Else
                 col.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
             End If
         Next
 
-        DGVdeliveries.RowTemplate.Height = 50
-        For Each row As DataGridViewRow In DGVdeliveries.Rows
-            row.Height = 50
-        Next
+        ApplyStandardGridLayout(DGVdeliveries)
 
         DGVdeliveries.DefaultCellStyle.Font = New Font("Arial", 8, FontStyle.Regular)
         DGVdeliveries.ColumnHeadersDefaultCellStyle.Font = New Font("Arial", 9, FontStyle.Bold)
         DGVdeliveries.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVdeliveries.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVdeliveries.Columns.Add(viewCol)
+        End If
+
+        If IsAdminUser() Then
+            If Not DGVdeliveries.Columns.Contains(ColPost) Then
+                Dim postCol As New DataGridViewButtonColumn() With {
+                    .Name = ColPost,
+                    .HeaderText = "Post",
+                    .UseColumnTextForButtonValue = False,
+                    .Width = 100,
+                    .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                    .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+                }
+                DGVdeliveries.Columns.Add(postCol)
+            End If
+        ElseIf DGVdeliveries.Columns.Contains(ColPost) Then
+            DGVdeliveries.Columns.Remove(ColPost)
+        End If
+
+        If Not DGVdeliveries.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVdeliveries.Columns.Add(deleteCol)
+        End If
+    End Sub
+
+    Private Sub UpdatePostButtonStates()
+        If Not DGVdeliveries.Columns.Contains(ColPost) Then Exit Sub
+
+        For Each row As DataGridViewRow In DGVdeliveries.Rows
+            If row.IsNewRow Then Continue For
+
+            Dim statusText As String = If(row.Cells("Status").Value, "").ToString().Trim()
+            Dim isPosted As Boolean = String.Equals(statusText, "Posted", StringComparison.OrdinalIgnoreCase)
+            Dim postCell As DataGridViewButtonCell = TryCast(row.Cells(ColPost), DataGridViewButtonCell)
+            If postCell Is Nothing Then Continue For
+
+            postCell.Value = If(isPosted, "Posted", "Post")
+            postCell.ReadOnly = isPosted
+            postCell.Style.ForeColor = If(isPosted, Color.DimGray, Color.Black)
+            postCell.Style.BackColor = If(isPosted, Color.Gainsboro, Color.White)
+        Next
     End Sub
 
     Private Sub DGVdeliveries_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs) Handles DGVdeliveries.DataBindingComplete
@@ -243,14 +311,7 @@ Public Class Admin_Deliveries
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -266,26 +327,34 @@ Public Class Admin_Deliveries
             Return
         End If
 
+        OpenEditModalById(DeliveryID)
+    End Sub
+
+    Private Sub OpenEditModalById(deliveryId As Integer)
         Using f As New Add_Deliveries()
-            f.deliveriesid = DeliveryID
+            f.deliveriesid = deliveryId
             If f.ShowDialog() = DialogResult.OK Then
                 LoadDeliveries(String.Empty)
             End If
         End Using
     End Sub
 
-    Private Sub btnCancel_Click(sender As Object, e As EventArgs) Handles btnRemove.Click
+    Private Sub btnCancel_Click(sender As Object, e As EventArgs)
         If DeliveryProductID = -1 Then
             MessageBox.Show("Please select a product first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
 
+        DeleteDeliveryProductById(DeliveryProductID)
+    End Sub
+
+    Private Sub DeleteDeliveryProductById(deliveryProductId As Integer)
         Dim result = MessageBox.Show("Are you sure you want to delete this delivery?", "Confirm Cancel", MessageBoxButtons.YesNo, MessageBoxIcon.Question)
         If result = DialogResult.Yes Then
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     Using cmd As New SqlCommand("DELETE FROM tbl_delivery_products WHERE DeliveryProductID = @DeliveryProductID", conn)
-                        cmd.Parameters.Add(New SqlParameter("@DeliveryProductID", SqlDbType.Int) With {.Value = DeliveryProductID})
+                        cmd.Parameters.Add(New SqlParameter("@DeliveryProductID", SqlDbType.Int) With {.Value = deliveryProductId})
                         conn.Open()
                         cmd.ExecuteNonQuery()
                     End Using
@@ -301,9 +370,41 @@ Public Class Admin_Deliveries
         End If
     End Sub
 
-    Private Sub btnPost_Click(sender As Object, e As EventArgs) Handles btnPost.Click
-        If DeliveryProductID = -1 Then
-            MessageBox.Show("Please select a product first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+    Private Sub DGVdeliveries_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVdeliveries.CellContentClick
+        If e.RowIndex < 0 Then Exit Sub
+        If e.ColumnIndex < 0 Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVdeliveries.Rows(e.RowIndex)
+        Dim deliveryId As Integer = Convert.ToInt32(row.Cells("DeliveryID").Value)
+        Dim deliveryProductId As Integer = Convert.ToInt32(row.Cells("DeliveryProductID").Value)
+
+        DeliveryID = deliveryId
+        DeliveryProductID = deliveryProductId
+
+        Dim colName As String = DGVdeliveries.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit Then
+            OpenEditModalById(deliveryId)
+        ElseIf colName = ColPost Then
+            If Not IsAdminUser() Then
+                MessageBox.Show("Only Admin users can post deliveries to inventory.", "Access Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                Exit Sub
+            End If
+
+            Dim statusText As String = If(row.Cells("Status").Value, "").ToString().Trim()
+            If String.Equals(statusText, "Posted", StringComparison.OrdinalIgnoreCase) Then
+                MessageBox.Show("This record is already posted.", "Already Posted", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                Exit Sub
+            End If
+
+            PostDeliveryProductById(deliveryProductId)
+        ElseIf colName = ColDelete Then
+            DeleteDeliveryProductById(deliveryProductId)
+        End If
+    End Sub
+
+    Private Sub PostDeliveryProductById(deliveryProductId As Integer)
+        If Not IsAdminUser() Then
+            MessageBox.Show("Only Admin users can post deliveries to inventory.", "Access Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
         End If
 
@@ -319,15 +420,15 @@ Public Class Admin_Deliveries
                     Dim qtyToAdd As Integer
                     Dim newCostPrice As Decimal
 
-                    Using getCmd As New SqlCommand("SELECT ProductID, Quantity, CostPrice FROM tbl_delivery_products WHERE DeliveryProductID = @DeliveryProductID", conn, tran)
-                        getCmd.Parameters.Add(New SqlParameter("@DeliveryProductID", SqlDbType.Int) With {.Value = DeliveryProductID})
+                    Using getCmd As New SqlCommand("SELECT ProductID, Quantity, CostPrice FROM tbl_delivery_products WHERE DeliveryProductID = @DeliveryProductID AND Status = 'Pending'", conn, tran)
+                        getCmd.Parameters.Add(New SqlParameter("@DeliveryProductID", SqlDbType.Int) With {.Value = deliveryProductId})
                         Using rdr As SqlDataReader = getCmd.ExecuteReader()
                             If rdr.Read() Then
                                 productID = Convert.ToInt32(rdr("ProductID"))
                                 qtyToAdd = Convert.ToInt32(rdr("Quantity"))
                                 newCostPrice = Convert.ToDecimal(rdr("CostPrice"))
                             Else
-                                MessageBox.Show("Product not found in deliveries.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+                                MessageBox.Show("This record is already posted or no longer available for posting.", "Already Posted", MessageBoxButtons.OK, MessageBoxIcon.Information)
                                 tran.Rollback()
                                 Return
                             End If
@@ -374,14 +475,19 @@ Public Class Admin_Deliveries
                         End Using
 
                         Using delCmd As New SqlCommand("DELETE FROM tbl_delivery_products WHERE DeliveryProductID = @PendingID", conn, tran)
-                            delCmd.Parameters.Add(New SqlParameter("@PendingID", SqlDbType.Int) With {.Value = DeliveryProductID})
+                            delCmd.Parameters.Add(New SqlParameter("@PendingID", SqlDbType.Int) With {.Value = deliveryProductId})
                             delCmd.ExecuteNonQuery()
                         End Using
                     Else
                         ' No existing posted record — mark current as Posted
-                        Using postCmd As New SqlCommand("UPDATE tbl_delivery_products SET Status = 'Posted', DateUpdated = GETDATE() WHERE DeliveryProductID = @DeliveryProductID", conn, tran)
-                            postCmd.Parameters.Add(New SqlParameter("@DeliveryProductID", SqlDbType.Int) With {.Value = DeliveryProductID})
-                            postCmd.ExecuteNonQuery()
+                        Using postCmd As New SqlCommand("UPDATE tbl_delivery_products SET Status = 'Posted', DateUpdated = GETDATE() WHERE DeliveryProductID = @DeliveryProductID AND Status = 'Pending'", conn, tran)
+                            postCmd.Parameters.Add(New SqlParameter("@DeliveryProductID", SqlDbType.Int) With {.Value = deliveryProductId})
+                            Dim affected As Integer = postCmd.ExecuteNonQuery()
+                            If affected = 0 Then
+                                MessageBox.Show("This record is already posted.", "Already Posted", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                                tran.Rollback()
+                                Return
+                            End If
                         End Using
                     End If
 
@@ -422,14 +528,7 @@ Public Class Admin_Deliveries
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)

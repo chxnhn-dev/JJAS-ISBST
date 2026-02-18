@@ -15,6 +15,9 @@ Imports Microsoft.VisualBasic.ApplicationServices
 ' End Class
 
 Public Class Admin_Supplier
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColSupplierId As String = "SupplierId"
     Private selectedSupplierId As Integer = -1
     Dim formtoshow As Form
 
@@ -34,8 +37,7 @@ Public Class Admin_Supplier
         tooltip.SetToolTip(txtSearch, "Search by company or supplier name.")
         tooltip.SetToolTip(lblPlaceholder, "Search by company or supplier name.")
         tooltip.SetToolTip(btnAdd, "Add a new supplier.")
-        tooltip.SetToolTip(btnEdit, "Edit the selected supplier.")
-        tooltip.SetToolTip(btnDelete, "Deactivate the selected supplier.")
+
 
         Select Case Login.CurrentUser.Role.ToLower()
             Case "staff"
@@ -106,7 +108,9 @@ Public Class Admin_Supplier
                 DGVsize.Columns("SupplierId").Visible = False
             End If
 
+            EnsureActionColumns()
             DGVsize.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVsize)
             DGVsize.ClearSelection()
 
             ' Update buttons after loading data
@@ -123,6 +127,34 @@ Public Class Admin_Supplier
         End Try
     End Sub
 
+    Private Sub EnsureActionColumns()
+        If Not DGVsize.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(viewCol)
+        End If
+
+        If Not DGVsize.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVsize.Columns.Add(deleteCol)
+        End If
+    End Sub
+
     'Private Sub UpdateButtonStates()
     '    ' UI Polish: Enable/disable buttons based on selection and role
     '    Dim hasSelection As Boolean = DGVsize.SelectedRows.Count > 0
@@ -132,14 +164,21 @@ Public Class Admin_Supplier
     'End Sub
 
     Private Sub DGVsize_CellClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellClick
-        If e.RowIndex >= 0 Then
-            Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
-            Dim val = row.Cells("SupplierId").Value
-            selectedSupplierId = If(val IsNot Nothing AndAlso Not IsDBNull(val), Convert.ToInt32(val), -1)
-            ' UI Polish: Update button states on selection change
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
 
-            'UpdateButtonStates()
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim supplierId As Integer
+        If TryGetSupplierId(row, supplierId) Then
+            selectedSupplierId = supplierId
+        Else
+            selectedSupplierId = -1
         End If
+        ' UI Polish: Update button states on selection change
+
+        'UpdateButtonStates()
     End Sub
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
@@ -148,29 +187,19 @@ Public Class Admin_Supplier
             DisplayData("")
         End If
     End Sub
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs)
         If DGVsize.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a supplier first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        Try
-
-            Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
-            Dim supplierIdVal = row.Cells("SupplierId").Value
-            Dim supplierId As Integer = If(supplierIdVal IsNot Nothing AndAlso Not IsDBNull(supplierIdVal), Convert.ToInt32(supplierIdVal), -1)
-
-            Dim f As New Add_Supplier With {
-                .SupplierId = supplierId
-            }
-
-            If f.ShowDialog() = DialogResult.OK Then
-                DisplayData("")
-            End If
-
-        Catch ex As Exception
-            MessageBox.Show("An error occurred while editing supplier: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
+        Dim row As DataGridViewRow = DGVsize.SelectedRows(0)
+        Dim supplierId As Integer
+        If Not TryGetSupplierId(row, supplierId) Then
+            MessageBox.Show("Invalid Supplier ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+        OpenEditModalById(supplierId)
 
     End Sub
 
@@ -194,20 +223,36 @@ Public Class Admin_Supplier
         If e.KeyCode = Keys.Enter Then e.SuppressKeyPress = True
     End Sub
 
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs)
         If selectedSupplierId = -1 Then
             MessageBox.Show("Please select a supplier to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        If MessageBox.Show("Are you sure you want to delete this supplier?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            ' Refactoring: Moved to a potential SupplierRepository class for better separation
+        DeleteById(selectedSupplierId)
+    End Sub
 
+    Private Sub OpenEditModalById(supplierId As Integer)
+        Try
+            Dim f As New Add_Supplier With {
+                .SupplierId = supplierId
+            }
+
+            If f.ShowDialog() = DialogResult.OK Then
+                DisplayData("")
+            End If
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while editing supplier: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub DeleteById(supplierId As Integer)
+        If MessageBox.Show("Are you sure you want to delete this supplier?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
             Try
 
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     Using cmd As New SqlCommand("UPDATE tbl_supplier SET isactive = 0 WHERE SupplierId = @SupplierId", conn)
-                        cmd.Parameters.AddWithValue("@SupplierId", selectedSupplierId)
+                        cmd.Parameters.AddWithValue("@SupplierId", supplierId)
                         conn.Open()
                         cmd.ExecuteNonQuery()
                     End Using
@@ -228,11 +273,34 @@ Public Class Admin_Supplier
         End If
     End Sub
 
-    Private Sub btnTrash_Click(sender As Object, e As EventArgs)
-        Dim f As New Trash_Supplier()
-        If f.ShowDialog() = DialogResult.OK Then DisplayData("")
+    Private Sub DGVsize_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVsize.CellContentClick
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+        If Not DGVsize.Columns.Contains(ColViewEdit) OrElse Not DGVsize.Columns.Contains(ColDelete) Then Exit Sub
+
+        Dim colName As String = DGVsize.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVsize.Rows(e.RowIndex)
+        Dim supplierId As Integer
+        If Not TryGetSupplierId(row, supplierId) Then Exit Sub
+        selectedSupplierId = supplierId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(supplierId)
+        ElseIf colName = ColDelete Then
+            DeleteById(supplierId)
+        End If
     End Sub
 
+    Private Function TryGetSupplierId(row As DataGridViewRow, ByRef supplierId As Integer) As Boolean
+        supplierId = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColSupplierId) Then Return False
+
+        Dim raw As Object = row.Cells(ColSupplierId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), supplierId)
+    End Function
     Private Sub StartSwitchTimer()
         switchtimer.Interval = 1000
         switchtimer.Start()
@@ -323,14 +391,7 @@ Public Class Admin_Supplier
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)
@@ -352,14 +413,7 @@ Public Class Admin_Supplier
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -385,9 +439,10 @@ Public Class Admin_Supplier
         End If
     End Sub
 
-    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+    Private Sub btnRefresh_Click(sender As Object, e As EventArgs)
         DisplayData("")
     End Sub
 
     ' Navigation methods unchanged...
 End Class
+

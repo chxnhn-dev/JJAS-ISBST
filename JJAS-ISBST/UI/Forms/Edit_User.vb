@@ -293,7 +293,7 @@ Public Class Edit_User
         Me.Close()
     End Sub
 
-    Private Sub Panel2_Paint(sender As Object, e As PaintEventArgs)
+    Private Sub Panel2_Paint(sender As Object, e As PaintEventArgs) Handles Panel2.Paint
 
     End Sub
 

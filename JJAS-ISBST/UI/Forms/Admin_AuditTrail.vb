@@ -45,6 +45,7 @@ Public Class Admin_AuditTrail
             ' Column headers
             DGVdeliveries.Columns("Name").HeaderText = "Full Name"
             DGVdeliveries.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVdeliveries)
             DGVdeliveries.ClearSelection()
 
         Catch ex As Exception

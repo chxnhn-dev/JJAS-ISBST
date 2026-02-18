@@ -484,6 +484,7 @@ Partial Class Admin_Brand
         DataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
         Me.DGVsize.RowHeadersDefaultCellStyle = DataGridViewCellStyle5
         Me.DGVsize.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing
+        Me.DGVsize.RowHeadersVisible = False
         DataGridViewCellStyle6.ForeColor = System.Drawing.Color.Black
         DataGridViewCellStyle6.SelectionForeColor = System.Drawing.Color.Black
         Me.DGVsize.RowsDefaultCellStyle = DataGridViewCellStyle6
@@ -778,3 +779,4 @@ Partial Class Admin_Brand
     Friend WithEvents btnAuditTrail As Button
     Friend WithEvents btnRefresh As Button
 End Class
+

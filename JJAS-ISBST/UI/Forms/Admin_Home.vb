@@ -4,10 +4,7 @@ Imports JJAS_ISBST.Login
 
 Public Class Admin_Home
     Dim formtoshow As Form
-<<<<<<< HEAD
     Private _sessionTimer As Timer
-=======
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
 
     Private Sub Admin_Home_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
@@ -40,7 +37,6 @@ Public Class Admin_Home
     End Sub
 
 
-<<<<<<< HEAD
     Private Sub StartSessionHeartbeat()
         ' Heartbeat every 60 seconds to keep session fresh and detect expiry/kick.
         _sessionTimer = New Timer()
@@ -74,8 +70,6 @@ Public Class Admin_Home
     End Sub
 
 
-=======
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
     ' 🧮 DASHBOARD SUMMARY PANELS
     Private Sub LoadDashboardStats()
         Try
@@ -219,14 +213,7 @@ Public Class Admin_Home
             Try
                 Using conn As SqlConnection = DataAccess.GetConnection()
                     conn.Open()
-<<<<<<< HEAD
                     SessionService.EndCurrentSession("Logout")
-=======
-                    Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                        cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                        cmd.ExecuteNonQuery()
-                    End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
                 End Using
             Catch ex As Exception
                 MsgBox("Error logging out: " & ex.Message)
@@ -443,14 +430,7 @@ Public Class Admin_Home
         Try
             Using conn As SqlConnection = DataAccess.GetConnection()
                 conn.Open()
-<<<<<<< HEAD
                 SessionService.EndCurrentSession("Logout")
-=======
-                Using cmd As New SqlCommand("UPDATE tbl_User SET IsLoggedIn=0 WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", CurrentUser.UserID)
-                    cmd.ExecuteNonQuery()
-                End Using
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
             End Using
         Catch ex As Exception
             MsgBox("Error logging out: " & ex.Message)

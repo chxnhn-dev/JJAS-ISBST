@@ -67,7 +67,7 @@ Public Class Edit_Supplier
     '                      Not String.IsNullOrWhiteSpace(txtAddress.Text.Trim()) AndAlso
     '                      IsValidContactNumber(txtContactNumber.Text.Trim())
     'End Sub
-    Private Sub txtcontactnumber_KeyPress(sender As Object, e As KeyPressEventArgs)
+    Private Sub txtcontactnumber_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtContactNumber.KeyPress
         If Not Char.IsDigit(e.KeyChar) AndAlso e.KeyChar <> ControlChars.Back Then
             e.Handled = True
         End If

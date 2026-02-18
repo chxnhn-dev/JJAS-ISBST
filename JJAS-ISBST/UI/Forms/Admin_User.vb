@@ -2,6 +2,10 @@ Imports System.Data.SqlClient
 Imports JJAS_ISBST.Login
 
 Public Class Admin_User
+    Private Const ColViewEdit As String = "colViewEdit"
+    Private Const ColDelete As String = "colDelete"
+    Private Const ColToggleStatus As String = "colToggleStatus"
+    Private Const ColUserId As String = "UserID"
     Dim userid As Integer = -1
     Dim formtoshow As Form
 
@@ -62,11 +66,13 @@ ORDER BY
             End If
         Next
 
+        EnsureActionColumns()
+        UpdateToggleButtonText()
+
         ' ✅ Highlight Active/Inactive rows
         For Each rowa As DataGridViewRow In DGVuser.Rows
             If Not rowa.IsNewRow Then
-                Dim isActiveVal As Boolean = True
-                Boolean.TryParse(rowa.Cells("isActive").Value.ToString(), isActiveVal)
+                Dim isActiveVal As Boolean = GetIsActiveFromValue(rowa.Cells("isActive").Value)
 
                 If isActiveVal Then
                     rowa.DefaultCellStyle.BackColor = Color.Honeydew     ' Active = Light green
@@ -77,9 +83,115 @@ ORDER BY
         Next
 
         DGVuser.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            ApplyStandardGridLayout(DGVuser)
             DGVuser.ClearSelection()
         Catch ex As Exception
             MessageBox.Show("An error occurred while loading users: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
+    End Sub
+
+    Private Sub EnsureActionColumns()
+        If Not DGVuser.Columns.Contains(ColViewEdit) Then
+            Dim viewCol As New DataGridViewButtonColumn() With {
+                .Name = ColViewEdit,
+                .HeaderText = "Action",
+                .Text = "View/Edit",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVuser.Columns.Add(viewCol)
+        End If
+
+        If Not DGVuser.Columns.Contains(ColToggleStatus) Then
+            Dim toggleCol As New DataGridViewButtonColumn() With {
+                .Name = ColToggleStatus,
+                .HeaderText = "Status",
+                .UseColumnTextForButtonValue = False,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVuser.Columns.Add(toggleCol)
+        End If
+
+        If Not DGVuser.Columns.Contains(ColDelete) Then
+            Dim deleteCol As New DataGridViewButtonColumn() With {
+                .Name = ColDelete,
+                .HeaderText = "Delete",
+                .Text = "Delete",
+                .UseColumnTextForButtonValue = True,
+                .Width = 100,
+                .AutoSizeMode = DataGridViewAutoSizeColumnMode.None,
+                .DefaultCellStyle = New DataGridViewCellStyle With {.Alignment = DataGridViewContentAlignment.MiddleCenter}
+            }
+            DGVuser.Columns.Add(deleteCol)
+        End If
+    End Sub
+
+    Private Function GetIsActiveFromValue(rawValue As Object) As Boolean
+        If rawValue Is Nothing OrElse IsDBNull(rawValue) Then Return False
+        If TypeOf rawValue Is Boolean Then Return CBool(rawValue)
+
+        Dim activeInt As Integer
+        If Integer.TryParse(rawValue.ToString(), activeInt) Then
+            Return activeInt = 1
+        End If
+
+        Dim activeBool As Boolean
+        If Boolean.TryParse(rawValue.ToString(), activeBool) Then
+            Return activeBool
+        End If
+
+        Return False
+    End Function
+
+    Private Sub UpdateToggleButtonText()
+        If Not DGVuser.Columns.Contains(ColToggleStatus) Then Exit Sub
+
+        For Each rowa As DataGridViewRow In DGVuser.Rows
+            If rowa.IsNewRow Then Continue For
+
+            Dim isActiveVal As Boolean = GetIsActiveFromValue(rowa.Cells("isActive").Value)
+            rowa.Cells(ColToggleStatus).Value = If(isActiveVal, "Deactivate", "Activate")
+        Next
+    End Sub
+
+    Private Sub ToggleUserActiveStatus(userIdValue As Integer, isCurrentlyActive As Boolean)
+        If isCurrentlyActive AndAlso IsUserLoggedIn(userIdValue) Then
+            MessageBox.Show("This user is currently logged in. You cannot deactivate this account.", "Action Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+
+        Dim nextIsActive As Integer = If(isCurrentlyActive, 0, 1)
+        Dim actionText As String = If(isCurrentlyActive, "deactivate", "activate")
+
+        If MessageBox.Show("Are you sure you want to " & actionText & " this user?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then
+            Exit Sub
+        End If
+
+        Try
+            Using conn As SqlConnection = DataAccess.GetConnection()
+                conn.Open()
+                Dim sql As String = "UPDATE tbl_User SET IsActive = @IsActive WHERE UserID = @UserID"
+                Using cmd As New SqlCommand(sql, conn)
+                    cmd.Parameters.AddWithValue("@IsActive", nextIsActive)
+                    cmd.Parameters.AddWithValue("@UserID", userIdValue)
+
+                    Dim rowsAffected As Integer = cmd.ExecuteNonQuery()
+                    If rowsAffected = 0 Then
+                        MessageBox.Show("User record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        Exit Sub
+                    End If
+                End Using
+            End Using
+
+            LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(isCurrentlyActive, "Deactivated a user.", "Activated a user."))
+            MessageBox.Show("User " & If(isCurrentlyActive, "deactivated", "activated") & " successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
+            displayData(txtSearch.Text.Trim())
+        Catch ex As Exception
+            MessageBox.Show("An error occurred while updating user status: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
     End Sub
 
@@ -100,52 +212,24 @@ ORDER BY
     ' ================================
     ' EDIT USER
     ' ================================
-    Private Sub btnEdit_Click(sender As Object, e As EventArgs) Handles btnEdit.Click
+    Private Sub btnEdit_Click(sender As Object, e As EventArgs) 
         If userid = -1 OrElse DGVuser.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a user first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-
-        If IsUserLoggedIn(userid) Then
-            MessageBox.Show("This user is currently logged in. You cannot Edit this account.", "Action Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+        Dim row As DataGridViewRow = DGVuser.SelectedRows(0)
+        Dim selectedUserId As Integer
+        If Not TryGetUserId(row, selectedUserId) Then
+            MessageBox.Show("Invalid User ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
-        Dim row As DataGridViewRow = DGVuser.SelectedRows(0)
-
-        Dim f As New Add_User With {
-            .UserID = Convert.ToInt32(row.Cells("UserID").Value)
-        }
-
-        If f.ShowDialog() = DialogResult.OK Then
-            displayData("")
-        End If
+        OpenEditModalById(selectedUserId)
     End Sub
     Private Function IsUserLoggedIn(userId As Integer) As Boolean
-<<<<<<< HEAD
         ' Uses dbo.tbl_AppSession (see /DB/Create_Session_Table.sql)
         Return SessionService.IsUserLoggedIn(userId)
-=======
-        Dim isLoggedIn As Boolean = False
-
-        Try
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Using cmd As New SqlCommand("SELECT IsLoggedIn FROM tbl_User WHERE UserID=@UserID", conn)
-                    cmd.Parameters.AddWithValue("@UserID", userId)
-                    Dim result = cmd.ExecuteScalar()
-                    If result IsNot Nothing AndAlso result IsNot DBNull.Value Then
-                        isLoggedIn = Convert.ToBoolean(result)
-                    End If
-                End Using
-            End Using
-        Catch ex As Exception
-            MessageBox.Show("Error checking login status: " & ex.Message, "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-        End Try
-
-        Return isLoggedIn
->>>>>>> 66ac34f75a7f9e5bea91a346824fcee990f61aba
     End Function
 
 
@@ -173,109 +257,43 @@ ORDER BY
     End Sub
 
     ' ================================
-    ' DEACTIVATE USER
-    ' ================================
-    Private Sub btnDeactivate_Click(sender As Object, e As EventArgs) Handles btnDeactivate.Click
-        If DGVuser.SelectedRows.Count = 0 Then
-            MessageBox.Show("Please select a user first.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Exit Sub
-        End If
-
-        Dim selectedRow As DataGridViewRow = DGVuser.SelectedRows(0)
-        Dim isActiveValue As Boolean = True
-        Boolean.TryParse(selectedRow.Cells("isActive").Value.ToString(), isActiveValue)
-
-        If Not isActiveValue Then
-            MessageBox.Show("User is already deactivated.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            Exit Sub
-        End If
-
-
-        Dim selectedUserID As Integer = Convert.ToInt32(selectedRow.Cells("UserID").Value)
-
-        If IsUserLoggedIn(selectedUserID) Then
-            MessageBox.Show("This user is currently logged in. You cannot deactivate this account.", "Action Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Exit Sub
-        End If
-
-        If MessageBox.Show("Are you sure you want to deactivate this user?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "UPDATE tbl_User SET IsActive = 0 WHERE UserID = @UserID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@UserID", selectedUserID)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
-            LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "Deactivated a user.")
-            MessageBox.Show("User deactivated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            displayData("")
-        End If
-    End Sub
-
-    ' ================================
-    ' ACTIVATE USER
-    ' ================================
-    Private Sub btnActivate_Click(sender As Object, e As EventArgs) Handles btnActivate.Click
-        If DGVuser.SelectedRows.Count = 0 Then
-            MessageBox.Show("Please select a user to activate.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Exit Sub
-        End If
-
-        ' Get the selected row FIRST
-        Dim selectedRow As DataGridViewRow = DGVuser.SelectedRows(0)
-
-        ' Safely handle Boolean or DBNull values
-        Dim isActiveValue As Boolean = False
-        If Not IsDBNull(selectedRow.Cells("isActive").Value) Then
-            Boolean.TryParse(selectedRow.Cells("isActive").Value.ToString(), isActiveValue)
-        End If
-
-        ' Check if user is already active
-        If isActiveValue Then
-            MessageBox.Show("User is already activated.", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            Exit Sub
-        End If
-
-        ' Continue with activation
-        Dim selectedUserID As Integer = Convert.ToInt32(selectedRow.Cells("UserID").Value)
-
-        If MessageBox.Show("Are you sure you want to activate this user?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "UPDATE tbl_User SET IsActive = 1 WHERE UserID = @UserID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@UserID", selectedUserID)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
-            LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "Activated a user.")
-            MessageBox.Show("User activated successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-            displayData("")
-        End If
-    End Sub
-
-
-    ' ================================
     ' DELETE USER
     ' ================================
-    Private Sub btnDelete_Click(sender As Object, e As EventArgs) Handles btnDelete.Click
+    Private Sub btnDelete_Click(sender As Object, e As EventArgs) 
         If DGVuser.SelectedRows.Count = 0 Then
             MessageBox.Show("Please select a user to delete.", "No Selection", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
 
         Dim selectedRow As DataGridViewRow = DGVuser.SelectedRows(0)
-        Dim selectedUserID As Integer = Convert.ToInt32(selectedRow.Cells("UserID").Value)
+        Dim selectedUserID As Integer
+        If Not TryGetUserId(selectedRow, selectedUserID) Then
+            MessageBox.Show("Invalid User ID selected.", "Invalid Data", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
+        DeleteUserById(selectedUserID)
+    End Sub
 
+    Private Sub OpenEditModalById(userIdValue As Integer)
+        If IsUserLoggedIn(userIdValue) Then
+            MessageBox.Show("This user is currently logged in. You cannot Edit this account.", "Action Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Exit Sub
+        End If
 
+        Dim f As New Add_User With {
+            .UserID = userIdValue
+        }
+
+        If f.ShowDialog() = DialogResult.OK Then
+            displayData("")
+        End If
+    End Sub
+
+    Private Sub DeleteUserById(selectedUserID As Integer)
         If IsUserLoggedIn(selectedUserID) Then
             MessageBox.Show("This user is currently logged in. You cannot Delete this account.", "Action Denied", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
-
 
         Try
 
@@ -296,6 +314,28 @@ ORDER BY
         Catch ex As Exception
             MessageBox.Show("An error occurred while deleting user: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
         End Try
+    End Sub
+
+    Private Sub DGVuser_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles DGVuser.CellContentClick
+        If e.RowIndex < 0 Then Exit Sub
+        If e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVuser.Columns(e.ColumnIndex).Name
+        If colName <> ColViewEdit AndAlso colName <> ColToggleStatus AndAlso colName <> ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVuser.Rows(e.RowIndex)
+        Dim selectedUserId As Integer
+        If Not TryGetUserId(row, selectedUserId) Then Exit Sub
+        userid = selectedUserId
+
+        If colName = ColViewEdit Then
+            OpenEditModalById(selectedUserId)
+        ElseIf colName = ColToggleStatus Then
+            Dim isCurrentlyActive As Boolean = GetIsActiveFromValue(row.Cells("isActive").Value)
+            ToggleUserActiveStatus(selectedUserId, isCurrentlyActive)
+        ElseIf colName = ColDelete Then
+            DeleteUserById(selectedUserId)
+        End If
     End Sub
     ' ================================
     ' NAVIGATION BUTTONS
@@ -423,11 +463,30 @@ ORDER BY
     End Sub
 
     Private Sub DGVuser_CellClick_1(sender As Object, e As DataGridViewCellEventArgs) Handles DGVuser.CellClick
-        If e.RowIndex >= 0 Then
-            userid = Convert.ToInt32(DGVuser.Rows(e.RowIndex).Cells("UserID").Value)
+        If e.RowIndex < 0 OrElse e.ColumnIndex < 0 Then Exit Sub
+
+        Dim colName As String = DGVuser.Columns(e.ColumnIndex).Name
+        If colName = ColViewEdit OrElse colName = ColToggleStatus OrElse colName = ColDelete Then Exit Sub
+
+        Dim row As DataGridViewRow = DGVuser.Rows(e.RowIndex)
+        Dim selectedUserId As Integer
+        If TryGetUserId(row, selectedUserId) Then
+            userid = selectedUserId
+        Else
+            userid = -1
         End If
     End Sub
-    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) Handles btnRefresh.Click
+
+    Private Function TryGetUserId(row As DataGridViewRow, ByRef userIdValue As Integer) As Boolean
+        userIdValue = -1
+        If row Is Nothing OrElse Not row.DataGridView.Columns.Contains(ColUserId) Then Return False
+
+        Dim raw As Object = row.Cells(ColUserId).Value
+        If raw Is Nothing OrElse IsDBNull(raw) Then Return False
+
+        Return Integer.TryParse(raw.ToString(), userIdValue)
+    End Function
+    Private Sub btnRefresh_Click(sender As Object, e As EventArgs) 
         displayData("")
     End Sub
 End Class
