@@ -1,8 +1,8 @@
-Imports System.Data.SqlClient
-
 Namespace FileMaintenance
     Public Class Brand
         Inherits FileMaintenanceBaseForm
+
+        Private ReadOnly _service As New BrandService()
 
         Private Const ColViewEdit As String = "colViewEdit"
         Private Const ColDelete As String = "colDelete"
@@ -36,25 +36,7 @@ Namespace FileMaintenance
         End Sub
 
         Protected Overrides Sub LoadTableData(searchText As String)
-            Dim dt As New DataTable()
-            Dim sql As String = "
-                SELECT BrandID,
-                       Brand
-                FROM tbl_Brand
-                WHERE IsActive = 1
-                  AND (@search = '' OR Brand LIKE @search)
-                ORDER BY Brand"
-
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@search", "%" & searchText & "%")
-                    Using da As New SqlDataAdapter(cmd)
-                        da.Fill(dt)
-                    End Using
-                End Using
-            End Using
-
-            DGVtable.DataSource = dt
+            DGVtable.DataSource = _service.GetBrands(searchText)
             If DGVtable.Columns.Contains(ColId) Then
                 DGVtable.Columns(ColId).Visible = False
             End If
@@ -92,21 +74,10 @@ Namespace FileMaintenance
             End If
         End Sub
 
-        Private Function DeleteValidation(id As Integer) As Boolean
-            Dim sql As String = "SELECT COUNT(*) FROM tbl_Products WHERE BrandID = @id"
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@id", id)
-                    conn.Open()
-                    Dim count As Integer = Convert.ToInt32(cmd.ExecuteScalar())
-                    Return count = 0
-                End Using
-            End Using
-        End Function
-
         Private Sub OpenEditModalById(brandId As Integer)
             Dim entryForm As New FrmBrandEntry With {
-                .BrandID = brandId
+                .Mode = EntryFormMode.EditExisting,
+                .SelectedId = brandId
             }
 
             If entryForm.ShowDialog() = DialogResult.OK Then
@@ -115,7 +86,7 @@ Namespace FileMaintenance
         End Sub
 
         Private Sub DeleteById(brandId As Integer)
-            If Not DeleteValidation(brandId) Then
+            If Not _service.CanDelete(brandId) Then
                 MessageBox.Show("Cannot delete. Brand is still used in Product.", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Exit Sub
             End If
@@ -124,15 +95,7 @@ Namespace FileMaintenance
                 Return
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "DELETE tbl_Brand WHERE BrandID = @BrandID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@BrandID", brandId)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.DeleteBrand(brandId)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted Brand.")
             ReloadData()
         End Sub

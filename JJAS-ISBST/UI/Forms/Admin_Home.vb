@@ -1,6 +1,6 @@
 Imports System.Data.SqlClient
 Imports System.Windows.Forms.DataVisualization.Charting
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 Public Class Admin_Home
     Dim formtoshow As Form
@@ -8,9 +8,9 @@ Public Class Admin_Home
 
     Private Sub Admin_Home_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
-            lblUserName.Text = "Welcome " & Login.CurrentUser.FullName
+            lblUserName.Text = "Welcome " & FrmLogin.CurrentUser.FullName
 
-            Select Case Login.CurrentUser.Role.ToLower()
+            Select Case FrmLogin.CurrentUser.Role.ToLower()
                 Case "cashier"
                     btnFileMaintenance.Visible = False
                     btnDelivery.Visible = False
@@ -58,13 +58,13 @@ Public Class Admin_Home
             End Try
 
             ' Clear current user info
-            Login.CurrentUser.UserID = 0
-            Login.CurrentUser.Username = ""
-            Login.CurrentUser.Role = ""
-            Login.CurrentUser.FullName = ""
+            FrmLogin.CurrentUser.UserID = 0
+            FrmLogin.CurrentUser.Username = ""
+            FrmLogin.CurrentUser.Role = ""
+            FrmLogin.CurrentUser.FullName = ""
 
             Me.Hide()
-            Dim f As New Login()
+            Dim f As New FrmLogin()
             f.Show()
         End If
     End Sub
@@ -165,7 +165,7 @@ Public Class Admin_Home
     End Sub
 
     Private Sub btnFileMaintenance_Click(sender As Object, e As EventArgs) Handles btnFileMaintenance.Click
-        Dim role As String = Login.CurrentUser.Role.ToLower()
+        Dim role As String = FrmLogin.CurrentUser.Role.ToLower()
 
         If role = "staff" Then
             formtoshow = New admin_category()
@@ -223,10 +223,10 @@ Public Class Admin_Home
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User Logged Out.")
 
             ' Clear current user info
-            Login.CurrentUser.UserID = 0
-            Login.CurrentUser.Username = ""
-            Login.CurrentUser.Role = ""
-            Login.CurrentUser.FullName = ""
+            FrmLogin.CurrentUser.UserID = 0
+            FrmLogin.CurrentUser.Username = ""
+            FrmLogin.CurrentUser.Role = ""
+            FrmLogin.CurrentUser.FullName = ""
 
 
             ' Close current form
@@ -234,7 +234,7 @@ Public Class Admin_Home
             Me.Hide()
 
             ' Show Login form again
-            Dim f As New Login()
+            Dim f As New FrmLogin()
             f.Show()
         End If
     End Sub

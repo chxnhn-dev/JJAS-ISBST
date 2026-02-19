@@ -63,6 +63,7 @@ Namespace FileMaintenance
             ConfigureSearchSection()
             ConfigurePrimaryActionButton()
             UpdatePaginationState()
+
             ReloadData()
         End Sub
 
@@ -277,11 +278,11 @@ Namespace FileMaintenance
         End Sub
 
         Private Sub btnDelivery_Click(sender As Object, e As EventArgs) Handles btnDelivery.Click
-            OpenForm(New FrmManageDeliveries())
+            OpenForm(New Admin_Deliveries())
         End Sub
 
         Private Sub btnInventory_Click(sender As Object, e As EventArgs) Handles btnInventory.Click
-            OpenForm(New FrmInventory())
+            OpenForm(New Admin_Inventory())
         End Sub
 
         Private Sub btnPos_Click(sender As Object, e As EventArgs) Handles btnPos.Click
@@ -289,11 +290,11 @@ Namespace FileMaintenance
         End Sub
 
         Private Sub btnTransaction_Click(sender As Object, e As EventArgs) Handles btnTransaction.Click
-            OpenForm(New FrmTransactions())
+            OpenForm(New Admin_transaction())
         End Sub
 
         Private Sub btnAuditTrail_Click(sender As Object, e As EventArgs) Handles btnAuditTrail.Click
-            OpenForm(New FrmAuditTrail())
+            OpenForm(New Admin_AuditTrail())
         End Sub
 
         Private Sub btnLogout_Click(sender As Object, e As EventArgs) Handles btnLogout.Click

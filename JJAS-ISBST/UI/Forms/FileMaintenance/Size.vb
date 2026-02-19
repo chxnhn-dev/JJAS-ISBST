@@ -1,8 +1,8 @@
-Imports System.Data.SqlClient
-
 Namespace FileMaintenance
     Public Class Size
         Inherits FileMaintenanceBaseForm
+
+        Private ReadOnly _service As New SizeService()
 
         Private Const ColViewEdit As String = "colViewEdit"
         Private Const ColDelete As String = "colDelete"
@@ -36,26 +36,7 @@ Namespace FileMaintenance
         End Sub
 
         Protected Overrides Sub LoadTableData(searchText As String)
-            Dim dt As New DataTable()
-            Dim sql As String = "
-                SELECT SizeID,
-                       Size,
-                       Description
-                FROM tbl_Size
-                WHERE IsActive = 1
-                  AND (@search = '' OR Size LIKE @search)
-                ORDER BY Size"
-
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@search", "%" & searchText & "%")
-                    Using da As New SqlDataAdapter(cmd)
-                        da.Fill(dt)
-                    End Using
-                End Using
-            End Using
-
-            DGVtable.DataSource = dt
+            DGVtable.DataSource = _service.GetSizes(searchText)
             If DGVtable.Columns.Contains(ColId) Then
                 DGVtable.Columns(ColId).Visible = False
             End If
@@ -93,21 +74,10 @@ Namespace FileMaintenance
             End If
         End Sub
 
-        Private Function DeleteValidation(id As Integer) As Boolean
-            Dim sql As String = "SELECT COUNT(*) FROM tbl_Products WHERE SizeID = @id"
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@id", id)
-                    conn.Open()
-                    Dim count As Integer = Convert.ToInt32(cmd.ExecuteScalar())
-                    Return count = 0
-                End Using
-            End Using
-        End Function
-
         Private Sub OpenEditModalById(sizeId As Integer)
             Dim entryForm As New FrmSizeEntry With {
-                .SizeID = sizeId
+                .Mode = EntryFormMode.EditExisting,
+                .SelectedId = sizeId
             }
 
             If entryForm.ShowDialog() = DialogResult.OK Then
@@ -116,7 +86,7 @@ Namespace FileMaintenance
         End Sub
 
         Private Sub DeleteById(sizeId As Integer)
-            If Not DeleteValidation(sizeId) Then
+            If Not _service.CanDelete(sizeId) Then
                 MessageBox.Show("Cannot delete. Size is still used in Product.", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Exit Sub
             End If
@@ -125,15 +95,7 @@ Namespace FileMaintenance
                 Return
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "DELETE tbl_Size WHERE SizeID = @SizeID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@SizeID", sizeId)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.DeleteSize(sizeId)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted Size.")
             ReloadData()
         End Sub

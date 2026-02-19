@@ -1,23 +1,35 @@
-Imports System.Data.SqlClient
 Imports JJAS_ISBST.FrmLogin
 
-' Note: For better separation of concerns, consider moving database operations (e.g., loading suppliers, saving deliveries) to a dedicated data access layer, such as a DeliveryRepository class.
-' This would make the form code cleaner and easier to test. Example structure:
-' Public Class DeliveryRepository
-'     Public Function GetActiveSuppliers() As DataTable
-'         ' Implementation here
-'     End Function
-'     Public Sub SaveDelivery(supplierId As Integer, orderNumber As String, deliveryDate As Date, products As DataTable)
-'         ' Implementation here
-'     End Sub
-'     ' Other methods...
-' End Class
-
 Public Class FrmDeliveryEntry
+    Private ReadOnly _service As New DeliveriesService()
+
     Private Const ColGridEdit As String = "colGridEdit"
     Private Const ColGridDelete As String = "colGridDelete"
     Private Const ColTempRowId As String = "TempRowID"
-    Public Property deliveriesid As Integer = -1
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
+    Public Property deliveriesid As Integer
+        Get
+            Return SelectedId
+        End Get
+        Set(value As Integer)
+            SelectedId = value
+            If value > 0 Then
+                Mode = EntryFormMode.EditExisting
+            Else
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
+
+    Private ReadOnly Property IsEditMode As Boolean
+        Get
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
+        End Get
+    End Property
+
     Private dtPending As DataTable
     Private _isLoading As Boolean = False
     Private _nextTempRowId As Integer = 1
@@ -152,28 +164,24 @@ Public Class FrmDeliveryEntry
     Private Sub displayData()
         EnsureDtPending()
 
-        ' Refresh product images if needed
         For Each row As DataRow In dtPending.Rows
             Dim path As String = If(row("ImagePath") IsNot Nothing, row("ImagePath").ToString(), String.Empty)
             If Not String.IsNullOrEmpty(path) AndAlso IO.File.Exists(path) Then
                 Using tempImg As Image = Image.FromFile(path)
-                    row("ProductImage") = New Bitmap(tempImg) ' clone so file isn’t locked
+                    row("ProductImage") = New Bitmap(tempImg)
                 End Using
             Else
                 row("ProductImage") = Nothing
             End If
         Next
 
-        ' Bind to grid
         DGVdeliveries.DataSource = dtPending
         EnsureActionColumns()
 
-        ' Hide ProductID and ImagePath
         If DGVdeliveries.Columns.Contains(ColTempRowId) Then DGVdeliveries.Columns(ColTempRowId).Visible = False
         If DGVdeliveries.Columns.Contains("ProductID") Then DGVdeliveries.Columns("ProductID").Visible = False
         If DGVdeliveries.Columns.Contains("ImagePath") Then DGVdeliveries.Columns("ImagePath").Visible = False
 
-        ' Make product image appear first
         If DGVdeliveries.Columns.Contains("ProductImage") Then
             DGVdeliveries.Columns("ProductImage").DisplayIndex = 0
             DirectCast(DGVdeliveries.Columns("ProductImage"), DataGridViewImageColumn).ImageLayout = DataGridViewImageCellLayout.Zoom
@@ -199,25 +207,30 @@ Public Class FrmDeliveryEntry
         txtOrderNumber.Text = orderNumber
     End Sub
 
-    Private Sub Add_Deliveries_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmDeliveryEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         _isLoading = True
         Try
-            ' Load suppliers (companies) from tbl_supplier
             LoadSuppliers()
 
             dtpShipDate.MaxDate = DateTime.Today
 
-            generateorderNumber()
             dtPending = Nothing
             _nextTempRowId = 1
             EnsureDtPending()
+
+            If IsEditMode Then
+                Me.Text = "Edit Delivery"
+                LoadDeliveryDetails(SelectedId)
+            Else
+                Me.Text = "Add Delivery"
+                generateorderNumber()
+            End If
+
             displayData()
 
-
-            ' UI Polish: Add tooltips to clarify field requirements
             Dim tooltip As New ToolTip()
             tooltip.SetToolTip(cbCompany, "Select a supplier (company).")
-            tooltip.SetToolTip(dtpShipDate, "Select the delivery date (cannot be in the past).")
+            tooltip.SetToolTip(dtpShipDate, "Select the delivery date.")
             tooltip.SetToolTip(btnAdd, "Add a product to the delivery.")
             tooltip.SetToolTip(btnSave, "Save the delivery.")
         Finally
@@ -225,12 +238,8 @@ Public Class FrmDeliveryEntry
         End Try
     End Sub
 
-    ' Refactoring: Moved to a potential DeliveryRepository class for better separation
     Private Sub LoadSuppliers()
-        Dim dt As New DataTable()
-        Using da As New SqlDataAdapter("SELECT SupplierID, Company FROM tbl_supplier WHERE isactive = 1 ORDER BY Company", connect())
-            da.Fill(dt)
-        End Using
+        Dim dt As DataTable = _service.GetSupplierLookup()
 
         Dim row As DataRow = dt.NewRow()
         row("SupplierID") = 0
@@ -245,8 +254,6 @@ Public Class FrmDeliveryEntry
 
     Private Sub DGVsize_DataBindingComplete(sender As Object, e As DataGridViewBindingCompleteEventArgs) Handles DGVdeliveries.DataBindingComplete
         ApplyStandardGridLayout(DGVdeliveries)
-
-        ' Set fonts
         DGVdeliveries.DefaultCellStyle.Font = New Font("Arial", 8, FontStyle.Regular)
         DGVdeliveries.ColumnHeadersDefaultCellStyle.Font = New Font("Arial", 9, FontStyle.Bold)
         DGVdeliveries.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter
@@ -257,75 +264,54 @@ Public Class FrmDeliveryEntry
         dtPending.Clear()
         _nextTempRowId = 1
 
-        Using conn As SqlConnection = DataAccess.GetConnection()
-            conn.Open()
+        Dim header As DataRow = _service.GetDeliveryHeaderById(deliveryId)
+        If header Is Nothing Then
+            MessageBox.Show("Selected delivery record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Return
+        End If
 
-            ' --- Load header: get the stored SupplierID and delivery date/order number ---
-            Dim sqlHeader As String =
-                "SELECT OrderNumber, DeliveryDate, SupplierID FROM tbl_Deliveries WHERE DeliveryID = @DeliveryID"
+        If Not IsDBNull(header("OrderNumber")) Then txtOrderNumber.Text = header("OrderNumber").ToString()
 
-            Using cmd As New SqlCommand(sqlHeader, conn)
-                cmd.Parameters.AddWithValue("@DeliveryID", deliveryId)
-                Using rdr As SqlDataReader = cmd.ExecuteReader()
-                    If rdr.Read() Then
-                        If Not IsDBNull(rdr("OrderNumber")) Then txtOrderNumber.Text = rdr("OrderNumber").ToString()
+        If Not IsDBNull(header("DeliveryDate")) Then
+            Dim deliveryDate As DateTime = Convert.ToDateTime(header("DeliveryDate"))
+            If deliveryDate < dtpShipDate.MinDate Then
+                dtpShipDate.Value = dtpShipDate.MinDate
+            ElseIf deliveryDate > dtpShipDate.MaxDate Then
+                dtpShipDate.Value = dtpShipDate.MaxDate
+            Else
+                dtpShipDate.Value = deliveryDate
+            End If
+        End If
 
-                        If Not IsDBNull(rdr("DeliveryDate")) Then
-                            Dim deliveryDate As DateTime = Convert.ToDateTime(rdr("DeliveryDate"))
-                            If deliveryDate < dtpShipDate.MinDate Then
-                                dtpShipDate.Value = dtpShipDate.MinDate
-                            ElseIf deliveryDate > dtpShipDate.MaxDate Then
-                                dtpShipDate.Value = dtpShipDate.MaxDate
-                            Else
-                                dtpShipDate.Value = deliveryDate
-                            End If
-                        End If
+        If Not IsDBNull(header("SupplierID")) Then
+            Dim supplierId As Integer = Convert.ToInt32(header("SupplierID"))
+            Try
+                If supplierId > 0 Then
+                    _isLoading = True
+                    cbCompany.SelectedValue = supplierId
+                End If
+            Catch
+            Finally
+                _isLoading = False
+            End Try
+        End If
 
-                        If Not IsDBNull(rdr("SupplierID")) Then
-                            Dim supplierId As Integer = Convert.ToInt32(rdr("SupplierID"))
-                            Try
-                                If supplierId > 0 Then
-                                    _isLoading = True
-                                    cbCompany.SelectedValue = supplierId
-                                End If
-                            Catch ex As Exception
-                                ' ignore if cannot set
-                            Finally
-                                _isLoading = False
-                            End Try
-                        End If
-                    End If
-                End Using
-            End Using
+        Dim products As DataTable = _service.GetDeliveryProductsByDeliveryId(deliveryId)
+        dtPending.Clear()
+        For Each r As DataRow In products.Rows
+            Dim nr As DataRow = dtPending.NewRow()
+            nr(ColTempRowId) = GetNextTempRowId()
+            nr("ProductID") = r("ProductID")
+            nr("BarcodeNumber") = r("BarcodeNumber")
+            nr("Product") = r("Product")
+            nr("Quantity") = r("Quantity")
+            nr("CostPrice") = r("CostPrice")
+            nr("SellingPrice") = r("SellingPrice")
+            nr("ImagePath") = r("ImagePath")
+            nr("ProductImage") = Nothing
+            dtPending.Rows.Add(nr)
+        Next
 
-            ' --- Load Products for this delivery ---
-            Dim sqlProducts As String =
-        "SELECT dp.ProductID, p.BarcodeNumber, p.Product, dp.Quantity, dp.CostPrice, p.SellingPrice, p.ImagePath " &
-        "FROM tbl_Delivery_Products dp INNER JOIN tbl_Products p ON dp.ProductID = p.ProductID WHERE dp.DeliveryID = @DeliveryID"
-
-            Using da As New SqlDataAdapter(sqlProducts, conn)
-                da.SelectCommand.Parameters.AddWithValue("@DeliveryID", deliveryId)
-                Dim dt As New DataTable()
-                da.Fill(dt)
-
-                dtPending.Clear()
-                For Each r As DataRow In dt.Rows
-                    Dim nr As DataRow = dtPending.NewRow()
-                    nr(ColTempRowId) = GetNextTempRowId()
-                    nr("ProductID") = r("ProductID")
-                    nr("BarcodeNumber") = r("BarcodeNumber")
-                    nr("Product") = r("Product")
-                    nr("Quantity") = r("Quantity")
-                    nr("CostPrice") = r("CostPrice")
-                    nr("SellingPrice") = r("SellingPrice")
-                    nr("ImagePath") = r("ImagePath")
-                    nr("ProductImage") = Nothing
-                    dtPending.Rows.Add(nr)
-                Next
-            End Using
-        End Using
-
-        ' load images into dtPending (already done in displayData but double safe)
         For Each r As DataRow In dtPending.Rows
             Dim path As String = If(r("ImagePath") IsNot Nothing, r("ImagePath").ToString(), String.Empty)
             If Not String.IsNullOrEmpty(path) AndAlso IO.File.Exists(path) Then
@@ -340,13 +326,10 @@ Public Class FrmDeliveryEntry
         displayData()
     End Sub
 
-    ' Removed cbVendor-related code since we're now using suppliers directly
     Private Sub cbCompany_SelectedIndexChanged(sender As Object, e As EventArgs) Handles cbCompany.SelectedIndexChanged
-        ' No action needed since no sub-selection
     End Sub
 
     Private Sub cbCompany_DropDown(sender As Object, e As EventArgs) Handles cbCompany.DropDown
-        ' refresh suppliers if needed
         If cbCompany.Items.Count <= 1 Then
             _isLoading = True
             Try
@@ -360,27 +343,18 @@ Public Class FrmDeliveryEntry
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
         EnsureDtPending()
 
-        ' Validate delivery date (prevent past)
-        If dtpShipDate.Value < dtpShipDate.MinDate Then
-            MessageBox.Show("Delivery date cannot be earlier than " & dtpShipDate.MinDate.ToString("d") & ".", "Invalid Date", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-            Return
-        End If
-
         Dim f As New FrmDeliveryProductEntry
         If f.ShowDialog() = DialogResult.OK Then
             Dim imgPath As String = f.SelectedImagePath
             Dim productImage As Image = LoadImageFromPath(imgPath)
 
-            ' check if product already exists in dtPending
             Dim existingRows() As DataRow = dtPending.Select("ProductID = " & f.selectedID.ToString())
             If existingRows.Length > 0 Then
-                ' ✅ Increase quantity and update cost price
                 existingRows(0)("Quantity") = Convert.ToInt32(existingRows(0)("Quantity")) + f.SelectedQuantity
                 existingRows(0)("CostPrice") = f.SelectedCostPrice
                 existingRows(0)("SellingPrice") = f.SelectedSellingPrice
-                MessageBox.Show("Product already exists — quantity updated.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
+                MessageBox.Show("Product already exists; quantity updated.", "Updated", MessageBoxButtons.OK, MessageBoxIcon.Information)
             Else
-                ' ✅ Add new product
                 dtPending.Rows.Add(GetNextTempRowId(),
                                f.selectedID,
                                f.SelectedBarcode,
@@ -419,9 +393,7 @@ Public Class FrmDeliveryEntry
         End If
     End Sub
 
-
     Private Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
-        ' Enhanced Validation: Trim inputs and validate selections
         If cbCompany.SelectedIndex <= 0 OrElse cbCompany.SelectedValue Is Nothing OrElse Convert.ToInt32(cbCompany.SelectedValue) = 0 Then
             MessageBox.Show("Please select a supplier.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Return
@@ -433,51 +405,22 @@ Public Class FrmDeliveryEntry
             Return
         End If
 
-        ' Refactoring: Moved to a potential DeliveryRepository class for better separation
-        Using conn As SqlConnection = DataAccess.GetConnection()
-            conn.Open()
-            Using tran As SqlTransaction = conn.BeginTransaction()
-                Try
-                    Dim newDeliveryId As Integer
+        Dim actionText As String = If(IsEditMode, "update", "save")
+        If MessageBox.Show($"Are you sure you want to {actionText} this delivery?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then
+            Return
+        End If
 
-                    ' Fixed: Insert SupplierID instead of CompanyID/VendorID
-                    Dim insertDeliveries As String =
-                        "INSERT INTO tbl_deliveries (SupplierID, OrderNumber, DeliveryDate, DateCreated, Status) VALUES (@SupplierID, @OrderNumber, @DeliveryDate, GETDATE(), 'Pending'); SELECT SCOPE_IDENTITY();"
+        Try
+            _service.SaveDelivery(Mode, SelectedId, Convert.ToInt32(cbCompany.SelectedValue), txtOrderNumber.Text.Trim(), dtpShipDate.Value.Date, dtPending)
 
-                    Using cmd As New SqlCommand(insertDeliveries, conn, tran)
-                        cmd.Parameters.AddWithValue("@SupplierID", Convert.ToInt32(cbCompany.SelectedValue))
-                        cmd.Parameters.AddWithValue("@OrderNumber", txtOrderNumber.Text.Trim())
-                        cmd.Parameters.AddWithValue("@DeliveryDate", dtpShipDate.Value.Date)
-                        newDeliveryId = Convert.ToInt32(cmd.ExecuteScalar())
-                    End Using
+            LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited Deliveries.", "Added Deliveries."))
+            MessageBox.Show(If(IsEditMode, "Delivery updated successfully!", "Delivery saved successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
 
-                    For Each row As DataRow In dtPending.Rows
-                        Dim insertProduct As String =
-                            "INSERT INTO tbl_Delivery_Products (DeliveryID, ProductID, CostPrice, Quantity, DateUpdated, Status) VALUES (@DeliveryID, @ProductID, @CostPrice, @Quantity, GETDATE(), 'Pending')"
-
-                        Using cmd As New SqlCommand(insertProduct, conn, tran)
-                            cmd.Parameters.AddWithValue("@DeliveryID", newDeliveryId)
-                            cmd.Parameters.AddWithValue("@ProductID", row("ProductID"))
-                            cmd.Parameters.AddWithValue("@CostPrice", row("CostPrice"))
-                            cmd.Parameters.AddWithValue("@Quantity", row("Quantity"))
-                            cmd.ExecuteNonQuery()
-                        End Using
-                    Next
-
-                    tran.Commit()
-                    ' Security: Ensure CurrentUser details are securely retrieved (e.g., from a session or authenticated context, not hardcoded)
-                    ' Assuming CurrentUser is properly set via login/session management
-                    LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "Added Deliveries.")
-                    MessageBox.Show("Delivery saved successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
-
-                    Me.DialogResult = DialogResult.OK
-                    Me.Close()
-                Catch ex As Exception
-                    tran.Rollback()
-                    MessageBox.Show("Error saving delivery: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
-                End Try
-            End Using
-        End Using
+            Me.DialogResult = DialogResult.OK
+            Me.Close()
+        Catch ex As Exception
+            MessageBox.Show("Error saving delivery: " & ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error)
+        End Try
     End Sub
 
     Private Sub btnExit_Click(sender As Object, e As EventArgs) Handles btnExit.Click
@@ -485,5 +428,3 @@ Public Class FrmDeliveryEntry
         Me.Close()
     End Sub
 End Class
-
-

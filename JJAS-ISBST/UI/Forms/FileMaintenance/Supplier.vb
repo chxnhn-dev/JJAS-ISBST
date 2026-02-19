@@ -1,12 +1,12 @@
-Imports System.Data.SqlClient
-
 Namespace FileMaintenance
     Public Class Supplier
         Inherits FileMaintenanceBaseForm
 
+        Private ReadOnly _service As New SupplierService()
+
         Private Const ColViewEdit As String = "colViewEdit"
         Private Const ColDelete As String = "colDelete"
-        Private Const ColId As String = "SupplierId"
+        Private Const ColId As String = "SupplierID"
 
         Private selectedId As Integer = -1
 
@@ -36,27 +36,7 @@ Namespace FileMaintenance
         End Sub
 
         Protected Overrides Sub LoadTableData(searchText As String)
-            Dim dt As New DataTable()
-            Dim sql As String = "
-                SELECT SupplierId,
-                       Company,
-                       ContactNumber,
-                       Address
-                FROM tbl_supplier
-                WHERE isactive = 1
-                  AND (@search = '' OR Company LIKE @search)
-                ORDER BY SupplierId DESC"
-
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@search", "%" & searchText.Trim() & "%")
-                    Using da As New SqlDataAdapter(cmd)
-                        da.Fill(dt)
-                    End Using
-                End Using
-            End Using
-
-            DGVtable.DataSource = dt
+            DGVtable.DataSource = _service.GetSuppliers(searchText)
             If DGVtable.Columns.Contains(ColId) Then
                 DGVtable.Columns(ColId).Visible = False
             End If
@@ -96,7 +76,8 @@ Namespace FileMaintenance
 
         Private Sub OpenEditModalById(supplierId As Integer)
             Dim entryForm As New FrmSupplierEntry With {
-                .SupplierId = supplierId
+                .Mode = EntryFormMode.EditExisting,
+                .SelectedId = supplierId
             }
 
             If entryForm.ShowDialog() = DialogResult.OK Then
@@ -109,14 +90,7 @@ Namespace FileMaintenance
                 Return
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand("UPDATE tbl_supplier SET isactive = 0 WHERE SupplierId = @SupplierId", conn)
-                    cmd.Parameters.AddWithValue("@SupplierId", supplierId)
-                    conn.Open()
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.DeactivateSupplier(supplierId)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted supplier.")
             ReloadData()
         End Sub

@@ -1,17 +1,35 @@
-Imports System.Data.SqlClient
 Imports System.Text.RegularExpressions
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmSupplierEntry
+    Private ReadOnly _service As New SupplierService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property SupplierId As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return SupplierId.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Sub Add_Supplier_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmSupplierEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
             BlockCopyPaste(txtCompany)
             BlockCopyPaste(txtContactNumber)
@@ -42,24 +60,17 @@ Public Class FrmSupplierEntry
     End Sub
 
     Private Sub LoadSupplierForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT Company, ContactNumber, Address FROM tbl_supplier WHERE SupplierId = @SupplierId", connection)
-                command.Parameters.AddWithValue("@SupplierId", SupplierId.Value)
-                connection.Open()
+        Dim row As DataRow = _service.GetSupplierById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected supplier record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
+        End If
 
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        txtCompany.Text = reader("Company").ToString()
-                        txtContactNumber.Text = reader("ContactNumber").ToString()
-                        txtAddress.Text = reader("Address").ToString()
-                    Else
-                        MessageBox.Show("Selected supplier record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
+        txtCompany.Text = row("Company").ToString()
+        txtContactNumber.Text = row("ContactNumber").ToString()
+        txtAddress.Text = row("Address").ToString()
     End Sub
 
     Private Function IsValidContactNumber(num As String) As Boolean
@@ -68,22 +79,7 @@ Public Class FrmSupplierEntry
     End Function
 
     Private Function CompanyExists(companyName As String) As Boolean
-        Dim sql As String = "SELECT COUNT(1) FROM tbl_supplier WHERE Company = @Company"
-        If IsEditMode Then
-            sql &= " AND SupplierId <> @SupplierId"
-        End If
-
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Company", companyName.Trim())
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@SupplierId", SupplierId.Value)
-                End If
-
-                connection.Open()
-                Return Convert.ToInt32(command.ExecuteScalar()) > 0
-            End Using
-        End Using
+        Return _service.CompanyExists(companyName, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Sub txtcontactnumber_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtContactNumber.KeyPress
@@ -128,28 +124,7 @@ Public Class FrmSupplierEntry
         End If
 
         Try
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                Dim sql As String
-                If IsEditMode Then
-                    sql = "UPDATE tbl_supplier SET Company=@Company, ContactNumber=@ContactNumber, Address=@Address WHERE SupplierId=@SupplierId"
-                Else
-                    sql = "INSERT INTO tbl_supplier (Company, ContactNumber, Address, isactive, expiredate, dateCreated) VALUES (@Company, @ContactNumber, @Address, 1, null, GetDate())"
-                End If
-
-                Using command As New SqlCommand(sql, connection)
-                    command.Parameters.AddWithValue("@Company", company)
-                    command.Parameters.AddWithValue("@ContactNumber", contact)
-                    command.Parameters.AddWithValue("@Address", address)
-
-                    If IsEditMode Then
-                        command.Parameters.AddWithValue("@SupplierId", SupplierId.Value)
-                    End If
-
-                    command.ExecuteNonQuery()
-                End Using
-            End Using
+            _service.SaveSupplier(Mode, SelectedId, company, contact, address)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited supplier.", "Added supplier."))
             MessageBox.Show(If(IsEditMode, "Supplier updated successfully!", "Supplier added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -167,6 +142,5 @@ Public Class FrmSupplierEntry
     End Sub
 
     Private Sub Panel1_Paint(sender As Object, e As PaintEventArgs) Handles Panel1.Paint
-
     End Sub
 End Class

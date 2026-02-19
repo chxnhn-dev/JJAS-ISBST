@@ -1,26 +1,35 @@
-Imports System.Data.SqlClient
-Imports System.Security.Cryptography
-Imports System.Text
 Imports System.Net.Mail
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmUserEntry
+    Private ReadOnly _service As New UserService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property UserID As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return UserID.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Function HashPassword(password As String) As String
-        Using sha256 As SHA256 = SHA256.Create()
-            Dim bytes As Byte() = sha256.ComputeHash(Encoding.UTF8.GetBytes(password))
-            Return BitConverter.ToString(bytes).Replace("-", "").ToLower()
-        End Using
-    End Function
-
-    Private Sub Add_User_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmUserEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         For Each tb In {txtfirstname, txtlastname, txtcontactnumber, txtemail, txtaddress, txtusername, txtpassword, txtConfirmPass}
             BlockCopyPaste(tb)
         Next
@@ -42,58 +51,41 @@ Public Class FrmUserEntry
             Me.Text = "Edit User"
             btnAdd.Text = "  Update"
         Else
-            Me.Text = "FrmUserEntry"
+            Me.Text = "Add User"
             btnAdd.Text = "  Save"
         End If
     End Sub
 
     Private Sub LoadUserForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT Role, FirstName, LastName, ContactNumber, Email, Address, Username FROM tbl_User WHERE UserID = @UserID", connection)
-                command.Parameters.AddWithValue("@UserID", UserID.Value)
-                connection.Open()
-
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        cbrole.Text = reader("Role").ToString()
-                        txtfirstname.Text = reader("FirstName").ToString()
-                        txtlastname.Text = reader("LastName").ToString()
-                        txtcontactnumber.Text = reader("ContactNumber").ToString()
-                        txtemail.Text = reader("Email").ToString()
-                        txtaddress.Text = reader("Address").ToString()
-                        txtusername.Text = reader("Username").ToString()
-                        txtpassword.Clear()
-                        txtConfirmPass.Clear()
-                    Else
-                        MessageBox.Show("Selected user record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
-    End Sub
-
-    Private Function IsDuplicate(fieldName As String, fieldValue As String) As Boolean
-        Dim sql As String = $"SELECT COUNT(*) FROM tbl_User WHERE {fieldName} = @Value AND IsActive = 1"
-
-        If IsEditMode Then
-            sql &= " AND UserID <> @UserID"
+        Dim row As DataRow = _service.GetUserById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected user record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
         End If
 
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Value", fieldValue)
+        cbrole.Text = row("Role").ToString()
+        txtfirstname.Text = row("FirstName").ToString()
+        txtlastname.Text = row("LastName").ToString()
+        txtcontactnumber.Text = row("ContactNumber").ToString()
+        txtemail.Text = row("Email").ToString()
+        txtaddress.Text = row("Address").ToString()
+        txtusername.Text = row("Username").ToString()
+        txtpassword.Clear()
+        txtConfirmPass.Clear()
+    End Sub
 
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@UserID", UserID.Value)
-                End If
+    Private Function IsDuplicateUsername(value As String) As Boolean
+        Return _service.UsernameExists(value, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
+    End Function
 
-                connection.Open()
-                Dim count As Integer = Convert.ToInt32(command.ExecuteScalar())
-                Return count > 0
-            End Using
-        End Using
+    Private Function IsDuplicateEmail(value As String) As Boolean
+        Return _service.EmailExists(value, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
+    End Function
+
+    Private Function IsDuplicateContact(value As String) As Boolean
+        Return _service.ContactExists(value, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Function IsValidEmail(email As String) As Boolean
@@ -193,25 +185,25 @@ Public Class FrmUserEntry
                 Exit Sub
             End If
 
-            If IsDuplicate("Username", username) Then
+            If IsDuplicateUsername(username) Then
                 MessageBox.Show("Username already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Exit Sub
             End If
 
-            If IsDuplicate("Email", email) Then
+            If IsDuplicateEmail(email) Then
                 MessageBox.Show("Email already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Exit Sub
             End If
 
-            If IsDuplicate("ContactNumber", contact) Then
+            If IsDuplicateContact(contact) Then
                 MessageBox.Show("Contact Number already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
                 Exit Sub
             End If
 
-            Dim updatePassword As Boolean
+            Dim passwordToSave As String = Nothing
 
             If IsEditMode Then
-                updatePassword = Not String.IsNullOrWhiteSpace(password) OrElse Not String.IsNullOrWhiteSpace(confirmPass)
+                Dim updatePassword As Boolean = Not String.IsNullOrWhiteSpace(password) OrElse Not String.IsNullOrWhiteSpace(confirmPass)
                 If updatePassword Then
                     If String.IsNullOrWhiteSpace(password) OrElse String.IsNullOrWhiteSpace(confirmPass) Then
                         MessageBox.Show("Please enter and confirm the new password.", "Password Required", MessageBoxButtons.OK, MessageBoxIcon.Warning)
@@ -223,6 +215,7 @@ Public Class FrmUserEntry
                         txtConfirmPass.Focus()
                         Exit Sub
                     End If
+                    passwordToSave = password
                 End If
             Else
                 If String.IsNullOrWhiteSpace(password) OrElse String.IsNullOrWhiteSpace(confirmPass) Then
@@ -237,7 +230,7 @@ Public Class FrmUserEntry
                     Exit Sub
                 End If
 
-                updatePassword = True
+                passwordToSave = password
             End If
 
             Dim actionText As String = If(IsEditMode, "update", "add")
@@ -245,52 +238,7 @@ Public Class FrmUserEntry
                 Exit Sub
             End If
 
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                If IsEditMode Then
-                    Dim updateSql As String = "UPDATE tbl_User SET Role=@Role, FirstName=@FirstName, LastName=@LastName, ContactNumber=@ContactNumber, Email=@Email, Address=@Address, Username=@Username, DateCreated=@DateCreated WHERE UserID=@UserID"
-
-                    Using command As New SqlCommand(updateSql, connection)
-                        command.Parameters.AddWithValue("@Role", role)
-                        command.Parameters.AddWithValue("@FirstName", firstname)
-                        command.Parameters.AddWithValue("@LastName", lastname)
-                        command.Parameters.AddWithValue("@ContactNumber", contact)
-                        command.Parameters.AddWithValue("@Email", email)
-                        command.Parameters.AddWithValue("@Address", address)
-                        command.Parameters.AddWithValue("@Username", username)
-                        command.Parameters.AddWithValue("@DateCreated", DateTime.Now)
-                        command.Parameters.AddWithValue("@UserID", UserID.Value)
-                        command.ExecuteNonQuery()
-                    End Using
-
-                    If updatePassword Then
-                        Dim hashedPass = HashPassword(password)
-                        Using commandPass As New SqlCommand("UPDATE tbl_User SET Password=@Password WHERE UserID=@UserID", connection)
-                            commandPass.Parameters.AddWithValue("@Password", hashedPass)
-                            commandPass.Parameters.AddWithValue("@UserID", UserID.Value)
-                            commandPass.ExecuteNonQuery()
-                        End Using
-                    End If
-                Else
-                    Dim hashedPass = HashPassword(password)
-                    Dim insertSql As String = "INSERT INTO tbl_User (Role, FirstName, LastName, ContactNumber, Email, Address, Username, Password, DateCreated, IsActive) VALUES (@Role, @FirstName, @LastName, @ContactNumber, @Email, @Address, @Username, @Password, @DateCreated, @IsActive)"
-
-                    Using command As New SqlCommand(insertSql, connection)
-                        command.Parameters.AddWithValue("@Role", role)
-                        command.Parameters.AddWithValue("@FirstName", firstname)
-                        command.Parameters.AddWithValue("@LastName", lastname)
-                        command.Parameters.AddWithValue("@ContactNumber", contact)
-                        command.Parameters.AddWithValue("@Email", email)
-                        command.Parameters.AddWithValue("@Address", address)
-                        command.Parameters.AddWithValue("@Username", username)
-                        command.Parameters.AddWithValue("@Password", hashedPass)
-                        command.Parameters.AddWithValue("@DateCreated", DateTime.Now)
-                        command.Parameters.AddWithValue("@IsActive", True)
-                        command.ExecuteNonQuery()
-                    End Using
-                End If
-            End Using
+            _service.SaveUser(Mode, SelectedId, role, firstname, lastname, contact, email, address, username, passwordToSave)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited User.", "Added User."))
             MessageBox.Show(If(IsEditMode, "User updated successfully!", "User added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -314,6 +262,5 @@ Public Class FrmUserEntry
     End Sub
 
     Private Sub Panel2_Paint(sender As Object, e As PaintEventArgs) Handles Panel2.Paint
-
     End Sub
 End Class

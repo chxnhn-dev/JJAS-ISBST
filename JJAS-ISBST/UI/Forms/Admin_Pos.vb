@@ -1,7 +1,7 @@
 Imports System.Data.SqlClient
 Imports System.Drawing.Printing
 Imports System.Text
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 Public Class Admin_Pos
     Private Const CartEditButtonName As String = "colCartEdit"
@@ -34,7 +34,7 @@ Public Class Admin_Pos
             lblTransactionNo.Text = GenerateTransactionNo()
             lblDate.Text = DateTime.Now.ToString("MM/dd/yyyy hh:mm tt")
 
-            Select Case Login.CurrentUser.Role.ToLower()
+            Select Case FrmLogin.CurrentUser.Role.ToLower()
                 Case "cashier"
                     btnFileMaintenance.Visible = False
                     btnDelivery.Visible = False
@@ -677,7 +677,7 @@ Public Class Admin_Pos
                 VALUES 
                     (@Name, @ProductName, @BarcodeNumber, @Quantity, @Price, @Total, @Discount, @VatRate, @VatAmount, @Vatable, @TransactionNo, @Category, @CostPrice, GETDATE())"
                         Using cmd As New SqlCommand(query, conn)
-                            cmd.Parameters.AddWithValue("@Name", Login.CurrentUser.FullName)
+                            cmd.Parameters.AddWithValue("@Name", FrmLogin.CurrentUser.FullName)
                             cmd.Parameters.AddWithValue("@ProductName", row.Cells("ProductName").Value.ToString())
                             cmd.Parameters.AddWithValue("@BarcodeNumber", row.Cells("BarcodeNumber").Value.ToString())
                             cmd.Parameters.AddWithValue("@Quantity", Convert.ToInt32(row.Cells("Quantity").Value))
@@ -756,7 +756,7 @@ Public Class Admin_Pos
             y += lineHeight
             e.Graphics.DrawString("TRANS#: " & lblTransactionNo.Text, fontBody, Brushes.Black, left, y)
             y += lineHeight
-            e.Graphics.DrawString("CASHIER: " & Login.CurrentUser.FullName, fontBody, Brushes.Black, left, y)
+            e.Graphics.DrawString("CASHIER: " & FrmLogin.CurrentUser.FullName, fontBody, Brushes.Black, left, y)
             y += lineHeight
             e.Graphics.DrawString(New String("-"c, 42), fontSmall, Brushes.Black, left, y)
             y += lineHeight
@@ -1156,10 +1156,10 @@ Public Class Admin_Pos
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User Logged Out.")
 
             ' Clear current user info
-            Login.CurrentUser.UserID = 0
-            Login.CurrentUser.Username = ""
-            Login.CurrentUser.Role = ""
-            Login.CurrentUser.FullName = ""
+            FrmLogin.CurrentUser.UserID = 0
+            FrmLogin.CurrentUser.Username = ""
+            FrmLogin.CurrentUser.Role = ""
+            FrmLogin.CurrentUser.FullName = ""
 
 
             ' Close current form
@@ -1167,7 +1167,7 @@ Public Class Admin_Pos
             Me.Hide()
 
             ' Show Login form again
-            Dim f As New Login()
+            Dim f As New FrmLogin()
             f.Show()
         End If
     End Sub

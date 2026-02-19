@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 Imports Microsoft.VisualBasic.ApplicationServices
 
 Public Class Edit_Size

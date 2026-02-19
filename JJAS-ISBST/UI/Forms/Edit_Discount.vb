@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 Imports System.Text.RegularExpressions
 
 Public Class Edit_Discount

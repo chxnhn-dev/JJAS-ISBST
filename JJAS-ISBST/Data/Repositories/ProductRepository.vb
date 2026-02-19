@@ -42,4 +42,37 @@ Public Class ProductRepository
         Return Db.ExecuteNonQuery(sql, New SqlParameter("@id", SqlDbType.Int) With {.Value = productId})
     End Function
 
+    Public Function GetProductById(productId As Integer) As DataRow
+        Dim sql As String = "
+            SELECT ProductID,
+                   Product,
+                   BarcodeNumber,
+                   SellingPrice,
+                   ImagePath
+            FROM tbl_Products
+            WHERE ProductID = @ProductID;"
+
+        Dim dt As DataTable = Db.QueryDataTable(sql, New SqlParameter("@ProductID", SqlDbType.Int) With {.Value = productId})
+        If dt.Rows.Count = 0 Then Return Nothing
+        Return dt.Rows(0)
+    End Function
+
+    Public Function FindFirstActiveProductByBarcode(searchText As String) As DataRow
+        Dim sql As String = "
+            SELECT TOP 1 ProductID,
+                         Product,
+                         BarcodeNumber,
+                         SellingPrice,
+                         ImagePath
+            FROM tbl_Products
+            WHERE IsActive = 1
+              AND BarcodeNumber LIKE @search
+            ORDER BY ProductID;"
+
+        Dim searchValue As String = "%" & If(searchText, String.Empty).Trim() & "%"
+        Dim dt As DataTable = Db.QueryDataTable(sql, New SqlParameter("@search", SqlDbType.NVarChar, 150) With {.Value = searchValue})
+        If dt.Rows.Count = 0 Then Return Nothing
+        Return dt.Rows(0)
+    End Function
+
 End Class

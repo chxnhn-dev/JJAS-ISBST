@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 Imports Microsoft.VisualBasic.ApplicationServices
 
 ' Note: For better separation of concerns, consider moving database operations (e.g., data retrieval, updates) to a dedicated data access layer, such as a SupplierRepository class.
@@ -39,7 +39,7 @@ Public Class Admin_Supplier
         tooltip.SetToolTip(btnAdd, "Add a new supplier.")
 
 
-        Select Case Login.CurrentUser.Role.ToLower()
+        Select Case FrmLogin.CurrentUser.Role.ToLower()
             Case "staff"
                 btnPos.Visible = False
                 btnUser.Visible = False
@@ -423,10 +423,10 @@ Public Class Admin_Supplier
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User Logged Out.")
 
             ' Clear current user info
-            Login.CurrentUser.UserID = 0
-            Login.CurrentUser.Username = ""
-            Login.CurrentUser.Role = ""
-            Login.CurrentUser.FullName = ""
+            FrmLogin.CurrentUser.UserID = 0
+            FrmLogin.CurrentUser.Username = ""
+            FrmLogin.CurrentUser.Role = ""
+            FrmLogin.CurrentUser.FullName = ""
 
 
             ' Close current form
@@ -434,7 +434,7 @@ Public Class Admin_Supplier
             Me.Hide()
 
             ' Show Login form again
-            Dim f As New Login()
+            Dim f As New FrmLogin()
             f.Show()
         End If
     End Sub

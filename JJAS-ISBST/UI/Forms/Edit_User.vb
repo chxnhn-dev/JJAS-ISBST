@@ -1,7 +1,7 @@
 Imports System.Data.SqlClient
 Imports System.Security.Cryptography
 Imports System.Text
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 Public Class Edit_User
 

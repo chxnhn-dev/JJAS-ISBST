@@ -1,16 +1,34 @@
-Imports System.Data.SqlClient
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmSizeEntry
+    Private ReadOnly _service As New SizeService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property SizeID As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return SizeID.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Sub Add_Size_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmSizeEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         BlockCopyPaste(txtSize)
         BlockCopyPaste(txtDescription)
         ConfigureMode()
@@ -31,46 +49,20 @@ Public Class FrmSizeEntry
     End Sub
 
     Private Sub LoadSizeForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT Size, Description FROM tbl_Size WHERE SizeID = @SizeID", connection)
-                command.Parameters.AddWithValue("@SizeID", SizeID.Value)
-                connection.Open()
-
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        txtSize.Text = reader("Size").ToString()
-                        txtDescription.Text = reader("Description").ToString()
-                    Else
-                        MessageBox.Show("Selected size record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
-    End Sub
-
-    Private Function IsDuplicate(fieldName As String, fieldValue As String) As Boolean
-        Dim sql As String = $"SELECT CASE WHEN EXISTS (SELECT 1 FROM tbl_Size WHERE LOWER({fieldName}) = LOWER(@Value)"
-
-        If IsEditMode Then
-            sql &= " AND SizeID <> @SizeID"
+        Dim row As DataRow = _service.GetSizeById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected size record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
         End If
 
-        sql &= ") THEN 1 ELSE 0 END"
+        txtSize.Text = row("Size").ToString()
+        txtDescription.Text = row("Description").ToString()
+    End Sub
 
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Value", fieldValue)
-
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@SizeID", SizeID.Value)
-                End If
-
-                connection.Open()
-                Return Convert.ToBoolean(command.ExecuteScalar())
-            End Using
-        End Using
+    Private Function IsDuplicate(sizeName As String) As Boolean
+        Return _service.IsDuplicateName(sizeName, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Sub txtBrand_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtSize.KeyPress
@@ -112,7 +104,7 @@ Public Class FrmSizeEntry
             Exit Sub
         End If
 
-        If IsDuplicate("Size", sizeValue) Then
+        If IsDuplicate(sizeValue) Then
             MessageBox.Show("Size already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
@@ -123,28 +115,7 @@ Public Class FrmSizeEntry
         End If
 
         Try
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                Dim sql As String
-                If IsEditMode Then
-                    sql = "UPDATE tbl_Size SET Size=@Size, Description=@Description, DateCreated=@DateCreated WHERE SizeID=@SizeID"
-                Else
-                    sql = "INSERT INTO tbl_Size (Size, Description, DateCreated) VALUES (@Size, @Description, @DateCreated)"
-                End If
-
-                Using command As New SqlCommand(sql, connection)
-                    command.Parameters.AddWithValue("@Size", sizeValue)
-                    command.Parameters.AddWithValue("@Description", description)
-                    command.Parameters.AddWithValue("@DateCreated", DateTime.Now)
-
-                    If IsEditMode Then
-                        command.Parameters.AddWithValue("@SizeID", SizeID.Value)
-                    End If
-
-                    command.ExecuteNonQuery()
-                End Using
-            End Using
+            _service.SaveSize(Mode, SelectedId, sizeValue, description)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited Size.", "Added Size."))
             MessageBox.Show(If(IsEditMode, "Updated successfully.", "Added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)

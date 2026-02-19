@@ -64,16 +64,10 @@
     <OptionInfer>On</OptionInfer>
   </PropertyGroup>
   <PropertyGroup>
-    <ManifestCertificateThumbprint>35970A0A500F9910A20AE665ED451727BAAD63D6</ManifestCertificateThumbprint>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ManifestKeyFile>JJAS-ISBST_TemporaryKey.pfx</ManifestKeyFile>
-  </PropertyGroup>
-  <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>My Project\app.manifest</ApplicationManifest>
@@ -276,93 +270,53 @@
     <Compile Include="UI\Forms\Modals\Auth\FrmAdminSignup.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmAuditTrail.Designer.vb">
-      <DependentUpon>FrmAuditTrail.vb</DependentUpon>
+    <Compile Include="UI\Forms\Add_Deliveries.Designer.vb">
+      <DependentUpon>Add_Deliveries.vb</DependentUpon>
     </Compile>
-    <Compile Include="UI\Forms\FrmAuditTrail.vb">
+    <Compile Include="UI\Forms\Add_Deliveries.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageBrand.Designer.vb">
-      <DependentUpon>FrmManageBrand.vb</DependentUpon>
+    <Compile Include="UI\Forms\Admin\Admin_AuditTrail.Designer.vb">
+      <DependentUpon>Admin_AuditTrail.vb</DependentUpon>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageBrand.vb">
+    <Compile Include="UI\Forms\Admin\Admin_AuditTrail.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageCategory.Designer.vb">
-      <DependentUpon>FrmManageCategory.vb</DependentUpon>
+    <Compile Include="UI\Forms\Admin\Admin_Deliveries.Designer.vb">
+      <DependentUpon>Admin_Deliveries.vb</DependentUpon>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageCategory.vb">
+    <Compile Include="UI\Forms\Admin\Admin_Deliveries.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageColor.Designer.vb">
-      <DependentUpon>FrmManageColor.vb</DependentUpon>
+    <Compile Include="UI\Forms\Admin\Admin_Inventory.Designer.vb">
+      <DependentUpon>Admin_Inventory.vb</DependentUpon>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageColor.vb" />
-    <Compile Include="UI\Forms\FrmManageDeliveries.Designer.vb">
-      <DependentUpon>FrmManageDeliveries.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageDeliveries.vb">
+    <Compile Include="UI\Forms\Admin\Admin_Inventory.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageDiscount.Designer.vb">
-      <DependentUpon>FrmManageDiscount.vb</DependentUpon>
+    <Compile Include="UI\Forms\Admin\Admin_Transaction.Designer.vb">
+      <DependentUpon>Admin_Transaction.vb</DependentUpon>
     </Compile>
-    <Compile Include="UI\Forms\FrmManageDiscount.vb">
+    <Compile Include="UI\Forms\Admin\Admin_Transaction.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmDashboard.vb">
+    <Compile Include="UI\Forms\ModuleListBaseForm.Designer.vb">
+      <DependentUpon>ModuleListBaseForm.vb</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\ModuleListBaseForm.vb">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmDashboard.Designer.vb">
+    <Compile Include="UI\Forms\Legacy\FrmDashboard.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\Legacy\FrmDashboard.Designer.vb">
       <DependentUpon>FrmDashboard.vb</DependentUpon>
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\Forms\FrmInventory.Designer.vb">
-      <DependentUpon>FrmInventory.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmInventory.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmPOS.Designer.vb">
+    <Compile Include="UI\Forms\Legacy\FrmPOS.Designer.vb">
       <DependentUpon>FrmPOS.vb</DependentUpon>
     </Compile>
-    <Compile Include="UI\Forms\FrmPOS.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageProduct.Designer.vb">
-      <DependentUpon>FrmManageProduct.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageProduct.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageSize.Designer.vb">
-      <DependentUpon>FrmManageSize.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageSize.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageSupplier.Designer.vb">
-      <DependentUpon>FrmManageSupplier.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageSupplier.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmTransactions.Designer.vb">
-      <DependentUpon>FrmTransactions.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmTransactions.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageUser.Designer.vb">
-      <DependentUpon>FrmManageUser.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmManageUser.vb">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="UI\Forms\FrmVAT.Designer.vb">
-      <DependentUpon>FrmVAT.vb</DependentUpon>
-    </Compile>
-    <Compile Include="UI\Forms\FrmVAT.vb">
+    <Compile Include="UI\Forms\Legacy\FrmPOS.vb">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="UI\Forms\FileMaintenance\FileMaintenanceBaseForm.Designer.vb">
@@ -402,104 +356,26 @@
     <Compile Include="Utils\AuthUtils.vb" />
     <Compile Include="Data\DataAccess.vb" />
     <Compile Include="Data\Db.vb" />
+    <Compile Include="Data\Repositories\BrandRepository.vb" />
+    <Compile Include="Data\Repositories\CategoryRepository.vb" />
+    <Compile Include="Data\Repositories\ColorRepository.vb" />
+    <Compile Include="Data\Repositories\DeliveriesRepository.vb" />
+    <Compile Include="Data\Repositories\DiscountRepository.vb" />
     <Compile Include="Data\Repositories\ProductRepository.vb" />
+    <Compile Include="Data\Repositories\SizeRepository.vb" />
+    <Compile Include="Data\Repositories\SupplierRepository.vb" />
+    <Compile Include="Data\Repositories\UserRepository.vb" />
     <Compile Include="Services\AuthService.vb" />
+    <Compile Include="Services\BrandService.vb" />
+    <Compile Include="Services\CategoryService.vb" />
+    <Compile Include="Services\ColorService.vb" />
+    <Compile Include="Services\DeliveriesService.vb" />
+    <Compile Include="Services\DiscountService.vb" />
     <Compile Include="Services\ImageLoader.vb" />
-    <Compile Include="Data\Datasets\DataSet_Brand.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Brand.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_BrandTrash.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_BrandTrash.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Category.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Category.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_CategoryTrrash.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_CategoryTrrash.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Color.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Color.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_ColorTrash.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_ColorTrash.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Company.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Company.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Delivery_Product.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Delivery_Product.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_DiscountTrash.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_DiscountTrash.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Products.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Products.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_ProductTrash.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_ProductTrash.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Size.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Size.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_SizeTrash.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_SizeTrash.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_TrashCompany.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_TrashCompany.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_TrashVendor.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_TrashVendor.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_User.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_User.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Vat.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Vat.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Vats.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Vats.xsd</DependentUpon>
-    </Compile>
-    <Compile Include="Data\Datasets\DataSet_Vendor.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DataSet_Vendor.xsd</DependentUpon>
-    </Compile>
+    <Compile Include="Services\ProductService.vb" />
+    <Compile Include="Services\SizeService.vb" />
+    <Compile Include="Services\SupplierService.vb" />
+    <Compile Include="Services\UserService.vb" />
     <Compile Include="UI\Forms\FrmLogin.Designer.vb">
       <DependentUpon>FrmLogin.vb</DependentUpon>
     </Compile>
@@ -519,11 +395,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Data\Datasets\tbl_Discount.Designer.vb">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>tbl_Discount.xsd</DependentUpon>
-    </Compile>
     <Compile Include="UI\Forms\Modals\Entries\FrmVATEntry.Designer.vb">
       <DependentUpon>FrmVATEntry.vb</DependentUpon>
     </Compile>
@@ -531,6 +402,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Services\SessionService.vb" />
+    <Compile Include="Utils\EntryFormMode.vb" />
     <Compile Include="Utils\SessionContext.vb" />
     <Compile Include="Utils\Utilities.vb" />
   </ItemGroup>
@@ -571,50 +443,29 @@
     <EmbeddedResource Include="UI\Forms\Modals\Auth\FrmAdminSignup.resx">
       <DependentUpon>FrmAdminSignup.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmAuditTrail.resx">
-      <DependentUpon>FrmAuditTrail.vb</DependentUpon>
+    <EmbeddedResource Include="UI\Forms\Add_Deliveries.resx">
+      <DependentUpon>Add_Deliveries.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageBrand.resx">
-      <DependentUpon>FrmManageBrand.vb</DependentUpon>
+    <EmbeddedResource Include="UI\Forms\Admin\Admin_AuditTrail.resx">
+      <DependentUpon>Admin_AuditTrail.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageCategory.resx">
-      <DependentUpon>FrmManageCategory.vb</DependentUpon>
+    <EmbeddedResource Include="UI\Forms\Admin\Admin_Deliveries.resx">
+      <DependentUpon>Admin_Deliveries.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageColor.resx">
-      <DependentUpon>FrmManageColor.vb</DependentUpon>
+    <EmbeddedResource Include="UI\Forms\Admin\Admin_Inventory.resx">
+      <DependentUpon>Admin_Inventory.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageDeliveries.resx">
-      <DependentUpon>FrmManageDeliveries.vb</DependentUpon>
+    <EmbeddedResource Include="UI\Forms\Admin\Admin_Transaction.resx">
+      <DependentUpon>Admin_Transaction.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageDiscount.resx">
-      <DependentUpon>FrmManageDiscount.vb</DependentUpon>
+    <EmbeddedResource Include="UI\Forms\ModuleListBaseForm.resx">
+      <DependentUpon>ModuleListBaseForm.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmDashboard.resx">
+    <EmbeddedResource Include="UI\Forms\Legacy\FrmDashboard.resx">
       <DependentUpon>FrmDashboard.vb</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmInventory.resx">
-      <DependentUpon>FrmInventory.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmPOS.resx">
+    <EmbeddedResource Include="UI\Forms\Legacy\FrmPOS.resx">
       <DependentUpon>FrmPOS.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageProduct.resx">
-      <DependentUpon>FrmManageProduct.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageSize.resx">
-      <DependentUpon>FrmManageSize.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageSupplier.resx">
-      <DependentUpon>FrmManageSupplier.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmTransactions.resx">
-      <DependentUpon>FrmTransactions.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmManageUser.resx">
-      <DependentUpon>FrmManageUser.vb</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UI\Forms\FrmVAT.resx">
-      <DependentUpon>FrmVAT.vb</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Forms\FileMaintenance\FileMaintenanceBaseForm.resx">
       <DependentUpon>FileMaintenanceBaseForm.vb</DependentUpon>
@@ -633,216 +484,6 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Data\Datasets\DataSet_Brand.xsc">
-      <DependentUpon>DataSet_Brand.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Brand.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Brand.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Brand.xss">
-      <DependentUpon>DataSet_Brand.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_BrandTrash.xsc">
-      <DependentUpon>DataSet_BrandTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_BrandTrash.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_BrandTrash.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_BrandTrash.xss">
-      <DependentUpon>DataSet_BrandTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Category.xsc">
-      <DependentUpon>DataSet_Category.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Category.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Category.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Category.xss">
-      <DependentUpon>DataSet_Category.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_CategoryTrrash.xsc">
-      <DependentUpon>DataSet_CategoryTrrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_CategoryTrrash.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_CategoryTrrash.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_CategoryTrrash.xss">
-      <DependentUpon>DataSet_CategoryTrrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Color.xsc">
-      <DependentUpon>DataSet_Color.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Color.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Color.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Color.xss">
-      <DependentUpon>DataSet_Color.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_ColorTrash.xsc">
-      <DependentUpon>DataSet_ColorTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_ColorTrash.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_ColorTrash.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_ColorTrash.xss">
-      <DependentUpon>DataSet_ColorTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Company.xsc">
-      <DependentUpon>DataSet_Company.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Company.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Company.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Company.xss">
-      <DependentUpon>DataSet_Company.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Delivery_Product.xsc">
-      <DependentUpon>DataSet_Delivery_Product.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Delivery_Product.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Delivery_Product.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Delivery_Product.xss">
-      <DependentUpon>DataSet_Delivery_Product.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_DiscountTrash.xsc">
-      <DependentUpon>DataSet_DiscountTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_DiscountTrash.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_DiscountTrash.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_DiscountTrash.xss">
-      <DependentUpon>DataSet_DiscountTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Products.xsc">
-      <DependentUpon>DataSet_Products.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Products.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Products.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Products.xss">
-      <DependentUpon>DataSet_Products.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_ProductTrash.xsc">
-      <DependentUpon>DataSet_ProductTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_ProductTrash.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_ProductTrash.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_ProductTrash.xss">
-      <DependentUpon>DataSet_ProductTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Size.xsc">
-      <DependentUpon>DataSet_Size.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Size.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Size.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Size.xss">
-      <DependentUpon>DataSet_Size.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_SizeTrash.xsc">
-      <DependentUpon>DataSet_SizeTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_SizeTrash.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_SizeTrash.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_SizeTrash.xss">
-      <DependentUpon>DataSet_SizeTrash.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_TrashCompany.xsc">
-      <DependentUpon>DataSet_TrashCompany.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_TrashCompany.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_TrashCompany.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_TrashCompany.xss">
-      <DependentUpon>DataSet_TrashCompany.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_TrashVendor.xsc">
-      <DependentUpon>DataSet_TrashVendor.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_TrashVendor.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_TrashVendor.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_TrashVendor.xss">
-      <DependentUpon>DataSet_TrashVendor.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_User.xsc">
-      <DependentUpon>DataSet_User.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_User.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_User.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_User.xss">
-      <DependentUpon>DataSet_User.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vat.xsc">
-      <DependentUpon>DataSet_Vat.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vat.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Vat.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vat.xss">
-      <DependentUpon>DataSet_Vat.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vats.xsc">
-      <DependentUpon>DataSet_Vats.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vats.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Vats.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vats.xss">
-      <DependentUpon>DataSet_Vats.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vendor.xsc">
-      <DependentUpon>DataSet_Vendor.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vendor.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>DataSet_Vendor.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\DataSet_Vendor.xss">
-      <DependentUpon>DataSet_Vendor.xsd</DependentUpon>
-    </None>
-    <None Include="JJAS-ISBST_TemporaryKey.pfx" />
     <None Include="My Project\app.manifest" />
     <None Include="My Project\Application.myapp">
       <Generator>MyApplicationCodeGenerator</Generator>
@@ -854,17 +495,6 @@
     </None>
     <None Include="App.config" />
     <None Include="packages.config" />
-    <None Include="Data\Datasets\tbl_Discount.xsc">
-      <DependentUpon>tbl_Discount.xsd</DependentUpon>
-    </None>
-    <None Include="Data\Datasets\tbl_Discount.xsd">
-      <Generator>MSDataSetGenerator</Generator>
-      <LastGenOutput>tbl_Discount.Designer.vb</LastGenOutput>
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="Data\Datasets\tbl_Discount.xss">
-      <DependentUpon>tbl_Discount.xsd</DependentUpon>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
@@ -892,6 +522,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\edit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\printer.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.VisualBasic.targets" />
 </Project>

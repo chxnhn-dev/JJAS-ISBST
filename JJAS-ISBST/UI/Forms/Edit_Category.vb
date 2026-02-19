@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 Public Class Edit_Category
     Public Property CategoryID As Integer

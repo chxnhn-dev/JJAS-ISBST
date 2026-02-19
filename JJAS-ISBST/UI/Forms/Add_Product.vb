@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 Public Class Add_Product
     Public Property ProductID As Integer?

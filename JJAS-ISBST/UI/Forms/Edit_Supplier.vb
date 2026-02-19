@@ -1,6 +1,6 @@
 Imports System.Data.SqlClient
 Imports System.Text.RegularExpressions
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 ' Note: For better separation of concerns, consider moving database operations (e.g., duplicate checks and updates) to a dedicated data access layer, such as a SupplierRepository class.
 ' This would make the form code cleaner and easier to test. Example structure:

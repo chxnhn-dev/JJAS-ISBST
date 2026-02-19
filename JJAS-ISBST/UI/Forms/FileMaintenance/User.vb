@@ -1,8 +1,8 @@
-Imports System.Data.SqlClient
-
 Namespace FileMaintenance
     Public Class User
         Inherits FileMaintenanceBaseForm
+
+        Private ReadOnly _service As New UserService()
 
         Private Const ColViewEdit As String = "colViewEdit"
         Private Const ColDelete As String = "colDelete"
@@ -37,38 +37,7 @@ Namespace FileMaintenance
         End Sub
 
         Protected Overrides Sub LoadTableData(searchText As String)
-            Dim dt As New DataTable()
-            Dim sql As String = "
-                SELECT
-                    UserID,
-                    Role,
-                    FirstName,
-                    LastName,
-                    Username,
-                    ContactNumber,
-                    Address,
-                    Email,
-                    DateCreated AS DateUpdated,
-                    isActive
-                FROM tbl_User
-                WHERE (FirstName LIKE @search
-                    OR LastName LIKE @search
-                    OR Username LIKE @search
-                    OR CONCAT(FirstName, ' ', LastName) LIKE @search
-                    OR (@search = 'active' AND isActive = 1)
-                    OR (@search = 'inactive' AND isActive = 0))
-                ORDER BY isActive ASC, DateCreated DESC"
-
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@search", "%" & searchText & "%")
-                    Using da As New SqlDataAdapter(cmd)
-                        da.Fill(dt)
-                    End Using
-                End Using
-            End Using
-
-            DGVtable.DataSource = dt
+            DGVtable.DataSource = _service.GetUsers(searchText)
 
             Dim hiddenCols() As String = {"UserID", "isActive"}
             For Each colName In hiddenCols
@@ -176,23 +145,14 @@ Namespace FileMaintenance
                 Exit Sub
             End If
 
-            Dim nextIsActive As Integer = If(isCurrentlyActive, 0, 1)
+            Dim nextIsActive As Boolean = Not isCurrentlyActive
             Dim actionText As String = If(isCurrentlyActive, "deactivate", "activate")
 
             If MessageBox.Show("Are you sure you want to " & actionText & " this user?", "Confirm", MessageBoxButtons.YesNo, MessageBoxIcon.Question) <> DialogResult.Yes Then
                 Exit Sub
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "UPDATE tbl_User SET IsActive = @IsActive WHERE UserID = @UserID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@IsActive", nextIsActive)
-                    cmd.Parameters.AddWithValue("@UserID", userIdValue)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.SetUserActiveStatus(userIdValue, nextIsActive)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, If(isCurrentlyActive, "Deactivated a user.", "Activated a user."))
             ReloadData()
         End Sub
@@ -204,7 +164,8 @@ Namespace FileMaintenance
             End If
 
             Dim entryForm As New FrmUserEntry With {
-                .UserID = userIdValue
+                .Mode = EntryFormMode.EditExisting,
+                .SelectedId = userIdValue
             }
 
             If entryForm.ShowDialog() = DialogResult.OK Then
@@ -222,15 +183,7 @@ Namespace FileMaintenance
                 Exit Sub
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "DELETE FROM tbl_User WHERE UserID = @UserID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@UserID", userIdValue)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.DeleteUser(userIdValue)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted a user.")
             ReloadData()
         End Sub

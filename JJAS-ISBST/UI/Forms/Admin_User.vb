@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 
 Public Class Admin_User
     Private Const ColViewEdit As String = "colViewEdit"
@@ -422,10 +422,10 @@ ORDER BY
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User Logged Out.")
 
             ' Clear current user info
-            Login.CurrentUser.UserID = 0
-            Login.CurrentUser.Username = ""
-            Login.CurrentUser.Role = ""
-            Login.CurrentUser.FullName = ""
+            FrmLogin.CurrentUser.UserID = 0
+            FrmLogin.CurrentUser.Username = ""
+            FrmLogin.CurrentUser.Role = ""
+            FrmLogin.CurrentUser.FullName = ""
 
 
             ' Close current form
@@ -433,7 +433,7 @@ ORDER BY
             Me.Hide()
 
             ' Show Login form again
-            Dim f As New Login()
+            Dim f As New FrmLogin()
             f.Show()
         End If
     End Sub

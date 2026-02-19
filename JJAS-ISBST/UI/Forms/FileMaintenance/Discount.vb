@@ -1,8 +1,8 @@
-Imports System.Data.SqlClient
-
 Namespace FileMaintenance
     Public Class Discount
         Inherits FileMaintenanceBaseForm
+
+        Private ReadOnly _service As New DiscountService()
 
         Private Const ColViewEdit As String = "colViewEdit"
         Private Const ColDelete As String = "colDelete"
@@ -36,27 +36,7 @@ Namespace FileMaintenance
         End Sub
 
         Protected Overrides Sub LoadTableData(searchText As String)
-            Dim dt As New DataTable()
-            Dim sql As String = "
-                SELECT DiscountID,
-                       DiscountName,
-                       DiscountValue,
-                       Description
-                FROM tbl_Discount
-                WHERE IsActive = 1
-                  AND (@search = '' OR DiscountName LIKE @search)
-                ORDER BY DiscountName"
-
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@search", "%" & searchText & "%")
-                    Using da As New SqlDataAdapter(cmd)
-                        da.Fill(dt)
-                    End Using
-                End Using
-            End Using
-
-            DGVtable.DataSource = dt
+            DGVtable.DataSource = _service.GetDiscounts(searchText)
             If DGVtable.Columns.Contains(ColId) Then
                 DGVtable.Columns(ColId).Visible = False
             End If
@@ -96,7 +76,8 @@ Namespace FileMaintenance
 
         Private Sub OpenEditModalById(discountId As Integer)
             Dim entryForm As New FrmDiscountEntry With {
-                .DiscountID = discountId
+                .Mode = EntryFormMode.EditExisting,
+                .SelectedId = discountId
             }
 
             If entryForm.ShowDialog() = DialogResult.OK Then
@@ -109,15 +90,7 @@ Namespace FileMaintenance
                 Return
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "DELETE tbl_Discount WHERE DiscountID = @DiscountID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@DiscountID", discountId)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.DeleteDiscount(discountId)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted Discount.")
             ReloadData()
         End Sub

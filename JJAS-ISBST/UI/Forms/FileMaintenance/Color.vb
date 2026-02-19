@@ -1,8 +1,8 @@
-Imports System.Data.SqlClient
-
 Namespace FileMaintenance
     Public Class Color
         Inherits FileMaintenanceBaseForm
+
+        Private ReadOnly _service As New ColorService()
 
         Private Const ColViewEdit As String = "colViewEdit"
         Private Const ColDelete As String = "colDelete"
@@ -36,25 +36,7 @@ Namespace FileMaintenance
         End Sub
 
         Protected Overrides Sub LoadTableData(searchText As String)
-            Dim dt As New DataTable()
-            Dim sql As String = "
-                SELECT ColorID,
-                       Color
-                FROM tbl_Color
-                WHERE IsActive = 1
-                  AND (@search = '' OR Color LIKE @search)
-                ORDER BY Color"
-
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@search", "%" & searchText & "%")
-                    Using da As New SqlDataAdapter(cmd)
-                        da.Fill(dt)
-                    End Using
-                End Using
-            End Using
-
-            DGVtable.DataSource = dt
+            DGVtable.DataSource = _service.GetColors(searchText)
             If DGVtable.Columns.Contains(ColId) Then
                 DGVtable.Columns(ColId).Visible = False
             End If
@@ -92,21 +74,10 @@ Namespace FileMaintenance
             End If
         End Sub
 
-        Private Function DeleteValidation(id As Integer) As Boolean
-            Dim sql As String = "SELECT COUNT(*) FROM tbl_Products WHERE ColorID = @id"
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@id", id)
-                    conn.Open()
-                    Dim count As Integer = Convert.ToInt32(cmd.ExecuteScalar())
-                    Return count = 0
-                End Using
-            End Using
-        End Function
-
         Private Sub OpenEditModalById(colorId As Integer)
             Dim entryForm As New FrmColorEntry With {
-                .ColorID = colorId
+                .Mode = EntryFormMode.EditExisting,
+                .SelectedId = colorId
             }
 
             If entryForm.ShowDialog() = DialogResult.OK Then
@@ -115,7 +86,7 @@ Namespace FileMaintenance
         End Sub
 
         Private Sub DeleteById(colorId As Integer)
-            If Not DeleteValidation(colorId) Then
+            If Not _service.CanDelete(colorId) Then
                 MessageBox.Show("Cannot delete. Color is still used in Product.", "Validation Failed", MessageBoxButtons.OK, MessageBoxIcon.Error)
                 Exit Sub
             End If
@@ -124,15 +95,7 @@ Namespace FileMaintenance
                 Return
             End If
 
-            Using conn As SqlConnection = DataAccess.GetConnection()
-                conn.Open()
-                Dim sql As String = "DELETE tbl_Color WHERE ColorID = @ColorID"
-                Using cmd As New SqlCommand(sql, conn)
-                    cmd.Parameters.AddWithValue("@ColorID", colorId)
-                    cmd.ExecuteNonQuery()
-                End Using
-            End Using
-
+            _service.DeleteColor(colorId)
             LogActivity(FrmLogin.CurrentUser.UserID, FrmLogin.CurrentUser.FullName, FrmLogin.CurrentUser.Username, FrmLogin.CurrentUser.Role, "Deleted Color.")
             ReloadData()
         End Sub

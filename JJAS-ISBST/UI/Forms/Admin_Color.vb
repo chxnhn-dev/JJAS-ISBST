@@ -1,5 +1,5 @@
 Imports System.Data.SqlClient
-Imports JJAS_ISBST.Login
+Imports JJAS_ISBST.FrmLogin
 Imports Microsoft.VisualBasic.ApplicationServices
 Public Class Admin_Color
     Private Const ColViewEdit As String = "colViewEdit"
@@ -19,7 +19,7 @@ Public Class Admin_Color
 
 
 
-        Select Case Login.CurrentUser.Role.ToLower()
+        Select Case FrmLogin.CurrentUser.Role.ToLower()
 
             Case "staff"
                 btnPOS.Visible = False
@@ -380,10 +380,10 @@ Public Class Admin_Color
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, "User Logged Out.")
 
             ' Clear current user info
-            Login.CurrentUser.UserID = 0
-            Login.CurrentUser.Username = ""
-            Login.CurrentUser.Role = ""
-            Login.CurrentUser.FullName = ""
+            FrmLogin.CurrentUser.UserID = 0
+            FrmLogin.CurrentUser.Username = ""
+            FrmLogin.CurrentUser.Role = ""
+            FrmLogin.CurrentUser.FullName = ""
 
 
             ' Close current form
@@ -391,7 +391,7 @@ Public Class Admin_Color
             Me.Hide()
 
             ' Show Login form again
-            Dim f As New Login()
+            Dim f As New FrmLogin()
             f.Show()
         End If
     End Sub

@@ -1,16 +1,34 @@
-Imports System.Data.SqlClient
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmBrandEntry
+    Private ReadOnly _service As New BrandService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property BrandID As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return BrandID.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Sub Add_Brand_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmBrandEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         BlockCopyPaste(txtbrand)
         ConfigureMode()
 
@@ -30,44 +48,19 @@ Public Class FrmBrandEntry
     End Sub
 
     Private Sub LoadBrandForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT Brand FROM tbl_Brand WHERE BrandID = @BrandID", connection)
-                command.Parameters.AddWithValue("@BrandID", BrandID.Value)
-                connection.Open()
-
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        txtbrand.Text = reader("Brand").ToString()
-                    Else
-                        MessageBox.Show("Selected brand record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
-    End Sub
-
-    Private Function IsDuplicate(fieldName As String, fieldValue As String) As Boolean
-        Dim sql As String = $"SELECT COUNT(*) FROM tbl_Brand WHERE LOWER({fieldName}) = LOWER(@Value)"
-
-        If IsEditMode Then
-            sql &= " AND BrandID <> @BrandID"
+        Dim row As DataRow = _service.GetBrandById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected brand record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
         End If
 
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Value", fieldValue)
+        txtbrand.Text = row("Brand").ToString()
+    End Sub
 
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@BrandID", BrandID.Value)
-                End If
-
-                connection.Open()
-                Dim count As Integer = Convert.ToInt32(command.ExecuteScalar())
-                Return count > 0
-            End Using
-        End Using
+    Private Function IsDuplicate(brandName As String) As Boolean
+        Return _service.IsDuplicateName(brandName, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Sub txtbrand_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtbrand.KeyPress
@@ -102,7 +95,7 @@ Public Class FrmBrandEntry
             Exit Sub
         End If
 
-        If IsDuplicate("Brand", brandName) Then
+        If IsDuplicate(brandName) Then
             MessageBox.Show("Brand already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
@@ -113,27 +106,7 @@ Public Class FrmBrandEntry
         End If
 
         Try
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                Dim sql As String
-                If IsEditMode Then
-                    sql = "UPDATE tbl_Brand SET Brand=@Brand, DateCreated=@DateCreated WHERE BrandID=@BrandID"
-                Else
-                    sql = "INSERT INTO tbl_Brand (Brand, DateCreated) VALUES (@Brand, @DateCreated)"
-                End If
-
-                Using command As New SqlCommand(sql, connection)
-                    command.Parameters.AddWithValue("@Brand", brandName)
-                    command.Parameters.AddWithValue("@DateCreated", DateTime.Now)
-
-                    If IsEditMode Then
-                        command.Parameters.AddWithValue("@BrandID", BrandID.Value)
-                    End If
-
-                    command.ExecuteNonQuery()
-                End Using
-            End Using
+            _service.SaveBrand(Mode, SelectedId, brandName)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited Brand.", "Added Brand."))
             MessageBox.Show(If(IsEditMode, "Updated successfully.", "Added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)

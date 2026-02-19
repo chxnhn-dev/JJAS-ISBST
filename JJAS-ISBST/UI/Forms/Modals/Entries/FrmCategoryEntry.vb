@@ -1,16 +1,34 @@
-Imports System.Data.SqlClient
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmCategoryEntry
+    Private ReadOnly _service As New CategoryService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property CategoryID As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return CategoryID.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Sub Add_Category_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmCategoryEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         BlockCopyPaste(txtBrand)
         ConfigureMode()
 
@@ -30,45 +48,19 @@ Public Class FrmCategoryEntry
     End Sub
 
     Private Sub LoadCategoryForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT Category FROM tbl_Category WHERE CategoryID = @CategoryID", connection)
-                command.Parameters.AddWithValue("@CategoryID", CategoryID.Value)
-                connection.Open()
-
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        txtBrand.Text = reader("Category").ToString()
-                    Else
-                        MessageBox.Show("Selected category record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
-    End Sub
-
-    Private Function IsDuplicate(fieldName As String, fieldValue As String) As Boolean
-        Dim sql As String = $"SELECT CASE WHEN EXISTS (SELECT 1 FROM tbl_Category WHERE LOWER({fieldName}) = LOWER(@Value)"
-
-        If IsEditMode Then
-            sql &= " AND CategoryID <> @CategoryID"
+        Dim row As DataRow = _service.GetCategoryById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected category record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
         End If
 
-        sql &= ") THEN 1 ELSE 0 END"
+        txtBrand.Text = row("Category").ToString()
+    End Sub
 
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Value", fieldValue)
-
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@CategoryID", CategoryID.Value)
-                End If
-
-                connection.Open()
-                Return Convert.ToBoolean(command.ExecuteScalar())
-            End Using
-        End Using
+    Private Function IsDuplicate(categoryName As String) As Boolean
+        Return _service.IsDuplicateName(categoryName, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Sub txtBrand_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtBrand.KeyPress
@@ -109,7 +101,7 @@ Public Class FrmCategoryEntry
             Exit Sub
         End If
 
-        If IsDuplicate("Category", categoryName) Then
+        If IsDuplicate(categoryName) Then
             MessageBox.Show("Category already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
@@ -120,27 +112,7 @@ Public Class FrmCategoryEntry
         End If
 
         Try
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                Dim sql As String
-                If IsEditMode Then
-                    sql = "UPDATE tbl_Category SET Category=@Category, DateCreated=@DateCreated WHERE CategoryID=@CategoryID"
-                Else
-                    sql = "INSERT INTO tbl_Category (Category, DateCreated) VALUES (@Category, @DateCreated)"
-                End If
-
-                Using command As New SqlCommand(sql, connection)
-                    command.Parameters.AddWithValue("@Category", categoryName)
-                    command.Parameters.AddWithValue("@DateCreated", DateTime.Now)
-
-                    If IsEditMode Then
-                        command.Parameters.AddWithValue("@CategoryID", CategoryID.Value)
-                    End If
-
-                    command.ExecuteNonQuery()
-                End Using
-            End Using
+            _service.SaveCategory(Mode, SelectedId, categoryName)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited Category.", "Added Category."))
             MessageBox.Show(If(IsEditMode, "Updated successfully.", "Added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)

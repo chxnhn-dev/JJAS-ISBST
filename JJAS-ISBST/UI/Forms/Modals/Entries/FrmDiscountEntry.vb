@@ -1,16 +1,34 @@
-Imports System.Data.SqlClient
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmDiscountEntry
+    Private ReadOnly _service As New DiscountService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property DiscountID As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return DiscountID.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Sub Add_Discount_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmDiscountEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         ConfigureMode()
         BlockCopyPaste(txtDiscountName)
         BlockCopyPaste(txtDiscountValue)
@@ -32,24 +50,17 @@ Public Class FrmDiscountEntry
     End Sub
 
     Private Sub LoadDiscountForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT DiscountName, DiscountValue, Description FROM tbl_Discount WHERE DiscountID = @DiscountID", connection)
-                command.Parameters.AddWithValue("@DiscountID", DiscountID.Value)
-                connection.Open()
+        Dim row As DataRow = _service.GetDiscountById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected discount record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
+        End If
 
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        txtDiscountName.Text = reader("DiscountName").ToString()
-                        txtDiscountValue.Text = Convert.ToDecimal(reader("DiscountValue")).ToString("0.##")
-                        txtDescription.Text = reader("Description").ToString()
-                    Else
-                        MessageBox.Show("Selected discount record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
+        txtDiscountName.Text = row("DiscountName").ToString()
+        txtDiscountValue.Text = Convert.ToDecimal(row("DiscountValue")).ToString("0.##")
+        txtDescription.Text = row("Description").ToString()
     End Sub
 
     Private Sub txtDiscountValue_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtDiscountValue.KeyPress
@@ -69,26 +80,7 @@ Public Class FrmDiscountEntry
     End Sub
 
     Private Function IsDuplicateDiscount(name As String) As Boolean
-        Dim sql As String = "SELECT CASE WHEN EXISTS (SELECT 1 FROM tbl_Discount WHERE LOWER(DiscountName) = LOWER(@Name)"
-
-        If IsEditMode Then
-            sql &= " AND DiscountID <> @DiscountID"
-        End If
-
-        sql &= ") THEN 1 ELSE 0 END"
-
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Name", name.Trim())
-
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@DiscountID", DiscountID.Value)
-                End If
-
-                connection.Open()
-                Return Convert.ToBoolean(command.ExecuteScalar())
-            End Using
-        End Using
+        Return _service.IsDuplicateName(name, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Sub btnAdd_Click(sender As Object, e As EventArgs) Handles btnAdd.Click
@@ -136,29 +128,7 @@ Public Class FrmDiscountEntry
         End If
 
         Try
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                Dim sql As String
-                If IsEditMode Then
-                    sql = "UPDATE tbl_Discount SET DiscountName=@DiscountName, DiscountValue=@DiscountValue, Description=@Description, DateUpdated=@DateUpdated WHERE DiscountID=@DiscountID"
-                Else
-                    sql = "INSERT INTO tbl_Discount (DiscountName, DiscountValue, Description, DateUpdated) VALUES (@DiscountName, @DiscountValue, @Description, @DateUpdated)"
-                End If
-
-                Using command As New SqlCommand(sql, connection)
-                    command.Parameters.AddWithValue("@DiscountName", discountName)
-                    command.Parameters.AddWithValue("@DiscountValue", discountValue)
-                    command.Parameters.AddWithValue("@Description", description)
-                    command.Parameters.AddWithValue("@DateUpdated", DateTime.Now)
-
-                    If IsEditMode Then
-                        command.Parameters.AddWithValue("@DiscountID", DiscountID.Value)
-                    End If
-
-                    command.ExecuteNonQuery()
-                End Using
-            End Using
+            _service.SaveDiscount(Mode, SelectedId, discountName, discountValue, description)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited Discount.", "Added discount."))
             MessageBox.Show(If(IsEditMode, "Updated successfully.", "Added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)

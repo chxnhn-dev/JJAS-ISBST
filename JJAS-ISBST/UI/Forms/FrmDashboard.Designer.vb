@@ -52,22 +52,24 @@ Partial Class FrmDashboard
         Me.btnyearly = New System.Windows.Forms.Button()
         Me.chartSales = New System.Windows.Forms.DataVisualization.Charting.Chart()
         Me.chartCategory = New System.Windows.Forms.DataVisualization.Charting.Chart()
-        Me.PictureBox1 = New System.Windows.Forms.PictureBox()
-        Me.btnHome = New System.Windows.Forms.Button()
-        Me.btnFileMaintenance = New System.Windows.Forms.Button()
-        Me.btnLogout = New System.Windows.Forms.Button()
-        Me.btnDelivery = New System.Windows.Forms.Button()
-        Me.btnInventory = New System.Windows.Forms.Button()
-        Me.btnPos = New System.Windows.Forms.Button()
-        Me.btnTransaction = New System.Windows.Forms.Button()
-        Me.btnAuditTrail = New System.Windows.Forms.Button()
-        Me.PanelMenu = New System.Windows.Forms.Panel()
         Me.Panel9 = New System.Windows.Forms.Panel()
         Me.lblActiveUSer = New System.Windows.Forms.Label()
         Me.Label3 = New System.Windows.Forms.Label()
         Me.Panel3 = New System.Windows.Forms.Panel()
         Me.lblProfitToday = New System.Windows.Forms.Label()
         Me.Label5 = New System.Windows.Forms.Label()
+        Me.panelmenu = New Guna.UI2.WinForms.Guna2Panel()
+        Me.btnLogout = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnAuditTrail = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnTransaction = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnPos = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnInventory = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnDelivery = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnFileMaintenance = New Guna.UI2.WinForms.Guna2Button()
+        Me.btnHome = New Guna.UI2.WinForms.Guna2Button()
+        Me.Guna2Panel21 = New Guna.UI2.WinForms.Guna2Panel()
+        Me.Guna2Panel17 = New Guna.UI2.WinForms.Guna2Panel()
+        Me.PictureBox2 = New System.Windows.Forms.PictureBox()
         Me.Panel5.SuspendLayout()
         Me.Panel1.SuspendLayout()
         Me.Panel2.SuspendLayout()
@@ -76,14 +78,11 @@ Partial Class FrmDashboard
         Me.Panel6.SuspendLayout()
         CType(Me.chartSales, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.chartCategory, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).BeginInit()
-        Me.PanelMenu.SuspendLayout()
         Me.Panel9.SuspendLayout()
         Me.Panel3.SuspendLayout()
+        Me.panelmenu.SuspendLayout()
+        CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
-        '
-        'switchtimer
-        '
         '
         'Panel5
         '
@@ -258,10 +257,10 @@ Partial Class FrmDashboard
         Me.Panel8.Controls.Add(Me.lblUserName)
         Me.Panel8.Controls.Add(Me.Button1)
         Me.Panel8.Dock = System.Windows.Forms.DockStyle.Top
-        Me.Panel8.Location = New System.Drawing.Point(243, 0)
+        Me.Panel8.Location = New System.Drawing.Point(234, 0)
         Me.Panel8.Margin = New System.Windows.Forms.Padding(4)
         Me.Panel8.Name = "Panel8"
-        Me.Panel8.Size = New System.Drawing.Size(1313, 53)
+        Me.Panel8.Size = New System.Drawing.Size(1386, 53)
         Me.Panel8.TabIndex = 100
         '
         'lblUserName
@@ -289,7 +288,7 @@ Partial Class FrmDashboard
         Me.Button1.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.Button1.ForeColor = System.Drawing.SystemColors.ButtonHighlight
         Me.Button1.Image = CType(resources.GetObject("Button1.Image"), System.Drawing.Image)
-        Me.Button1.Location = New System.Drawing.Point(1262, 0)
+        Me.Button1.Location = New System.Drawing.Point(1335, 0)
         Me.Button1.Margin = New System.Windows.Forms.Padding(4)
         Me.Button1.Name = "Button1"
         Me.Button1.Size = New System.Drawing.Size(51, 53)
@@ -416,228 +415,6 @@ Partial Class FrmDashboard
         Me.chartCategory.TabIndex = 0
         Me.chartCategory.Text = "Chart2"
         '
-        'PictureBox1
-        '
-        Me.PictureBox1.Dock = System.Windows.Forms.DockStyle.Top
-        Me.PictureBox1.Image = CType(resources.GetObject("PictureBox1.Image"), System.Drawing.Image)
-        Me.PictureBox1.Location = New System.Drawing.Point(0, 0)
-        Me.PictureBox1.Margin = New System.Windows.Forms.Padding(4)
-        Me.PictureBox1.Name = "PictureBox1"
-        Me.PictureBox1.Size = New System.Drawing.Size(243, 154)
-        Me.PictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
-        Me.PictureBox1.TabIndex = 0
-        Me.PictureBox1.TabStop = False
-        '
-        'btnHome
-        '
-        Me.btnHome.BackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(31, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnHome.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnHome.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnHome.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnHome.FlatAppearance.BorderSize = 0
-        Me.btnHome.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnHome.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnHome.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnHome.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnHome.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnHome.Image = CType(resources.GetObject("btnHome.Image"), System.Drawing.Image)
-        Me.btnHome.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.btnHome.Location = New System.Drawing.Point(0, 154)
-        Me.btnHome.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnHome.Name = "btnHome"
-        Me.btnHome.Padding = New System.Windows.Forms.Padding(0, 0, 87, 0)
-        Me.btnHome.Size = New System.Drawing.Size(243, 46)
-        Me.btnHome.TabIndex = 45
-        Me.btnHome.Text = " Home"
-        Me.btnHome.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-        Me.btnHome.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnHome.UseVisualStyleBackColor = False
-        '
-        'btnFileMaintenance
-        '
-        Me.btnFileMaintenance.BackColor = System.Drawing.Color.Black
-        Me.btnFileMaintenance.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnFileMaintenance.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnFileMaintenance.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnFileMaintenance.FlatAppearance.BorderSize = 0
-        Me.btnFileMaintenance.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnFileMaintenance.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnFileMaintenance.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnFileMaintenance.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnFileMaintenance.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnFileMaintenance.Image = CType(resources.GetObject("btnFileMaintenance.Image"), System.Drawing.Image)
-        Me.btnFileMaintenance.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.btnFileMaintenance.Location = New System.Drawing.Point(0, 200)
-        Me.btnFileMaintenance.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnFileMaintenance.Name = "btnFileMaintenance"
-        Me.btnFileMaintenance.Padding = New System.Windows.Forms.Padding(0, 0, 20, 0)
-        Me.btnFileMaintenance.Size = New System.Drawing.Size(243, 46)
-        Me.btnFileMaintenance.TabIndex = 22
-        Me.btnFileMaintenance.Text = " File Maintenance"
-        Me.btnFileMaintenance.TextAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.btnFileMaintenance.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnFileMaintenance.UseVisualStyleBackColor = False
-        '
-        'btnLogout
-        '
-        Me.btnLogout.BackColor = System.Drawing.Color.Black
-        Me.btnLogout.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnLogout.Dock = System.Windows.Forms.DockStyle.Bottom
-        Me.btnLogout.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnLogout.FlatAppearance.BorderSize = 0
-        Me.btnLogout.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnLogout.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnLogout.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnLogout.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnLogout.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnLogout.Location = New System.Drawing.Point(0, 838)
-        Me.btnLogout.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnLogout.Name = "btnLogout"
-        Me.btnLogout.Padding = New System.Windows.Forms.Padding(20, 0, 27, 0)
-        Me.btnLogout.Size = New System.Drawing.Size(243, 46)
-        Me.btnLogout.TabIndex = 41
-        Me.btnLogout.Text = "Logout"
-        Me.btnLogout.TextImageRelation = System.Windows.Forms.TextImageRelation.TextAboveImage
-        Me.btnLogout.UseVisualStyleBackColor = False
-        '
-        'btnDelivery
-        '
-        Me.btnDelivery.BackColor = System.Drawing.Color.Black
-        Me.btnDelivery.Cursor = System.Windows.Forms.Cursors.Arrow
-        Me.btnDelivery.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnDelivery.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelivery.FlatAppearance.BorderSize = 0
-        Me.btnDelivery.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelivery.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnDelivery.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnDelivery.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnDelivery.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnDelivery.Image = CType(resources.GetObject("btnDelivery.Image"), System.Drawing.Image)
-        Me.btnDelivery.Location = New System.Drawing.Point(0, 246)
-        Me.btnDelivery.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnDelivery.Name = "btnDelivery"
-        Me.btnDelivery.Padding = New System.Windows.Forms.Padding(0, 0, 13, 0)
-        Me.btnDelivery.Size = New System.Drawing.Size(243, 46)
-        Me.btnDelivery.TabIndex = 49
-        Me.btnDelivery.Text = " Delivery"
-        Me.btnDelivery.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnDelivery.UseVisualStyleBackColor = False
-        '
-        'btnInventory
-        '
-        Me.btnInventory.BackColor = System.Drawing.Color.Black
-        Me.btnInventory.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnInventory.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnInventory.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnInventory.FlatAppearance.BorderSize = 0
-        Me.btnInventory.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnInventory.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnInventory.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnInventory.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnInventory.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnInventory.Image = CType(resources.GetObject("btnInventory.Image"), System.Drawing.Image)
-        Me.btnInventory.Location = New System.Drawing.Point(0, 292)
-        Me.btnInventory.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnInventory.Name = "btnInventory"
-        Me.btnInventory.Size = New System.Drawing.Size(243, 46)
-        Me.btnInventory.TabIndex = 50
-        Me.btnInventory.Text = " Inventory"
-        Me.btnInventory.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnInventory.UseVisualStyleBackColor = False
-        '
-        'btnPos
-        '
-        Me.btnPos.BackColor = System.Drawing.Color.Black
-        Me.btnPos.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnPos.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnPos.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnPos.FlatAppearance.BorderSize = 0
-        Me.btnPos.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnPos.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnPos.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnPos.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnPos.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnPos.Image = CType(resources.GetObject("btnPos.Image"), System.Drawing.Image)
-        Me.btnPos.Location = New System.Drawing.Point(0, 338)
-        Me.btnPos.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnPos.Name = "btnPos"
-        Me.btnPos.Padding = New System.Windows.Forms.Padding(0, 0, 40, 0)
-        Me.btnPos.Size = New System.Drawing.Size(243, 46)
-        Me.btnPos.TabIndex = 48
-        Me.btnPos.Text = " POS"
-        Me.btnPos.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-        Me.btnPos.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnPos.UseVisualStyleBackColor = False
-        '
-        'btnTransaction
-        '
-        Me.btnTransaction.BackColor = System.Drawing.Color.Black
-        Me.btnTransaction.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnTransaction.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnTransaction.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnTransaction.FlatAppearance.BorderSize = 0
-        Me.btnTransaction.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnTransaction.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnTransaction.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnTransaction.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnTransaction.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnTransaction.Image = CType(resources.GetObject("btnTransaction.Image"), System.Drawing.Image)
-        Me.btnTransaction.Location = New System.Drawing.Point(0, 384)
-        Me.btnTransaction.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnTransaction.Name = "btnTransaction"
-        Me.btnTransaction.Padding = New System.Windows.Forms.Padding(0, 0, 33, 0)
-        Me.btnTransaction.Size = New System.Drawing.Size(243, 46)
-        Me.btnTransaction.TabIndex = 54
-        Me.btnTransaction.Text = " Transaction"
-        Me.btnTransaction.TextAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.btnTransaction.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnTransaction.UseVisualStyleBackColor = False
-        '
-        'btnAuditTrail
-        '
-        Me.btnAuditTrail.BackColor = System.Drawing.Color.Black
-        Me.btnAuditTrail.Cursor = System.Windows.Forms.Cursors.Hand
-        Me.btnAuditTrail.Dock = System.Windows.Forms.DockStyle.Top
-        Me.btnAuditTrail.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnAuditTrail.FlatAppearance.BorderSize = 0
-        Me.btnAuditTrail.FlatAppearance.MouseDownBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnAuditTrail.FlatAppearance.MouseOverBackColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
-        Me.btnAuditTrail.FlatStyle = System.Windows.Forms.FlatStyle.Flat
-        Me.btnAuditTrail.Font = New System.Drawing.Font("Segoe UI", 9.75!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        Me.btnAuditTrail.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.btnAuditTrail.Image = CType(resources.GetObject("btnAuditTrail.Image"), System.Drawing.Image)
-        Me.btnAuditTrail.ImageAlign = System.Drawing.ContentAlignment.MiddleRight
-        Me.btnAuditTrail.Location = New System.Drawing.Point(0, 430)
-        Me.btnAuditTrail.Margin = New System.Windows.Forms.Padding(4)
-        Me.btnAuditTrail.Name = "btnAuditTrail"
-        Me.btnAuditTrail.Padding = New System.Windows.Forms.Padding(0, 0, 40, 0)
-        Me.btnAuditTrail.Size = New System.Drawing.Size(243, 46)
-        Me.btnAuditTrail.TabIndex = 55
-        Me.btnAuditTrail.Text = "  Audit Trail"
-        Me.btnAuditTrail.TextAlign = System.Drawing.ContentAlignment.MiddleLeft
-        Me.btnAuditTrail.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText
-        Me.btnAuditTrail.UseVisualStyleBackColor = False
-        '
-        'PanelMenu
-        '
-        Me.PanelMenu.BackColor = System.Drawing.Color.Black
-        Me.PanelMenu.Controls.Add(Me.btnAuditTrail)
-        Me.PanelMenu.Controls.Add(Me.btnTransaction)
-        Me.PanelMenu.Controls.Add(Me.btnPos)
-        Me.PanelMenu.Controls.Add(Me.btnInventory)
-        Me.PanelMenu.Controls.Add(Me.btnDelivery)
-        Me.PanelMenu.Controls.Add(Me.btnLogout)
-        Me.PanelMenu.Controls.Add(Me.btnFileMaintenance)
-        Me.PanelMenu.Controls.Add(Me.btnHome)
-        Me.PanelMenu.Controls.Add(Me.PictureBox1)
-        Me.PanelMenu.Dock = System.Windows.Forms.DockStyle.Left
-        Me.PanelMenu.ForeColor = System.Drawing.SystemColors.ButtonHighlight
-        Me.PanelMenu.Location = New System.Drawing.Point(0, 0)
-        Me.PanelMenu.Margin = New System.Windows.Forms.Padding(4)
-        Me.PanelMenu.Name = "PanelMenu"
-        Me.PanelMenu.Size = New System.Drawing.Size(243, 884)
-        Me.PanelMenu.TabIndex = 90
-        '
         'Panel9
         '
         Me.Panel9.BackColor = System.Drawing.Color.FromArgb(CType(CType(108, Byte), Integer), CType(CType(117, Byte), Integer), CType(CType(125, Byte), Integer))
@@ -722,21 +499,271 @@ Partial Class FrmDashboard
         Me.Label5.Text = "    Profit Today         "
         Me.Label5.TextAlign = System.Drawing.ContentAlignment.TopRight
         '
+        'panelmenu
+        '
+        Me.panelmenu.Controls.Add(Me.btnLogout)
+        Me.panelmenu.Controls.Add(Me.btnAuditTrail)
+        Me.panelmenu.Controls.Add(Me.btnTransaction)
+        Me.panelmenu.Controls.Add(Me.btnPos)
+        Me.panelmenu.Controls.Add(Me.btnInventory)
+        Me.panelmenu.Controls.Add(Me.btnDelivery)
+        Me.panelmenu.Controls.Add(Me.btnFileMaintenance)
+        Me.panelmenu.Controls.Add(Me.btnHome)
+        Me.panelmenu.Controls.Add(Me.Guna2Panel21)
+        Me.panelmenu.Controls.Add(Me.Guna2Panel17)
+        Me.panelmenu.Controls.Add(Me.PictureBox2)
+        Me.panelmenu.Dock = System.Windows.Forms.DockStyle.Left
+        Me.panelmenu.FillColor = System.Drawing.Color.Black
+        Me.panelmenu.Location = New System.Drawing.Point(0, 0)
+        Me.panelmenu.Name = "panelmenu"
+        Me.panelmenu.Size = New System.Drawing.Size(234, 885)
+        Me.panelmenu.TabIndex = 102
+        '
+        'btnLogout
+        '
+        Me.btnLogout.Animated = True
+        Me.btnLogout.AutoRoundedCorners = True
+        Me.btnLogout.BackColor = System.Drawing.Color.Transparent
+        Me.btnLogout.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnLogout.DefaultAutoSize = True
+        Me.btnLogout.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnLogout.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnLogout.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnLogout.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnLogout.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnLogout.FillColor = System.Drawing.Color.Black
+        Me.btnLogout.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnLogout.ForeColor = System.Drawing.Color.White
+        Me.btnLogout.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnLogout.IndicateFocus = True
+        Me.btnLogout.Location = New System.Drawing.Point(17, 462)
+        Me.btnLogout.Name = "btnLogout"
+        Me.btnLogout.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnLogout.Size = New System.Drawing.Size(201, 44)
+        Me.btnLogout.TabIndex = 9
+        Me.btnLogout.Text = "Logout"
+        Me.btnLogout.UseTransparentBackground = True
+        '
+        'btnAuditTrail
+        '
+        Me.btnAuditTrail.Animated = True
+        Me.btnAuditTrail.AutoRoundedCorners = True
+        Me.btnAuditTrail.BackColor = System.Drawing.Color.Transparent
+        Me.btnAuditTrail.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnAuditTrail.DefaultAutoSize = True
+        Me.btnAuditTrail.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnAuditTrail.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnAuditTrail.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnAuditTrail.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnAuditTrail.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnAuditTrail.FillColor = System.Drawing.Color.Black
+        Me.btnAuditTrail.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnAuditTrail.ForeColor = System.Drawing.Color.White
+        Me.btnAuditTrail.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnAuditTrail.IndicateFocus = True
+        Me.btnAuditTrail.Location = New System.Drawing.Point(17, 418)
+        Me.btnAuditTrail.Name = "btnAuditTrail"
+        Me.btnAuditTrail.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnAuditTrail.Size = New System.Drawing.Size(201, 44)
+        Me.btnAuditTrail.TabIndex = 8
+        Me.btnAuditTrail.Text = "Audit Trail"
+        Me.btnAuditTrail.UseTransparentBackground = True
+        '
+        'btnTransaction
+        '
+        Me.btnTransaction.Animated = True
+        Me.btnTransaction.AutoRoundedCorners = True
+        Me.btnTransaction.BackColor = System.Drawing.Color.Transparent
+        Me.btnTransaction.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnTransaction.DefaultAutoSize = True
+        Me.btnTransaction.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnTransaction.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnTransaction.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnTransaction.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnTransaction.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnTransaction.FillColor = System.Drawing.Color.Black
+        Me.btnTransaction.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnTransaction.ForeColor = System.Drawing.Color.White
+        Me.btnTransaction.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnTransaction.IndicateFocus = True
+        Me.btnTransaction.Location = New System.Drawing.Point(17, 374)
+        Me.btnTransaction.Name = "btnTransaction"
+        Me.btnTransaction.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnTransaction.Size = New System.Drawing.Size(201, 44)
+        Me.btnTransaction.TabIndex = 7
+        Me.btnTransaction.Text = "Transaction"
+        Me.btnTransaction.UseTransparentBackground = True
+        '
+        'btnPos
+        '
+        Me.btnPos.Animated = True
+        Me.btnPos.AutoRoundedCorners = True
+        Me.btnPos.BackColor = System.Drawing.Color.Transparent
+        Me.btnPos.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnPos.DefaultAutoSize = True
+        Me.btnPos.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnPos.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnPos.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnPos.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnPos.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnPos.FillColor = System.Drawing.Color.Black
+        Me.btnPos.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnPos.ForeColor = System.Drawing.Color.White
+        Me.btnPos.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnPos.IndicateFocus = True
+        Me.btnPos.Location = New System.Drawing.Point(17, 330)
+        Me.btnPos.Name = "btnPos"
+        Me.btnPos.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnPos.Size = New System.Drawing.Size(201, 44)
+        Me.btnPos.TabIndex = 6
+        Me.btnPos.Text = "POS"
+        Me.btnPos.UseTransparentBackground = True
+        '
+        'btnInventory
+        '
+        Me.btnInventory.Animated = True
+        Me.btnInventory.AutoRoundedCorners = True
+        Me.btnInventory.BackColor = System.Drawing.Color.Transparent
+        Me.btnInventory.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnInventory.DefaultAutoSize = True
+        Me.btnInventory.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnInventory.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnInventory.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnInventory.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnInventory.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnInventory.FillColor = System.Drawing.Color.Black
+        Me.btnInventory.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnInventory.ForeColor = System.Drawing.Color.White
+        Me.btnInventory.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnInventory.IndicateFocus = True
+        Me.btnInventory.Location = New System.Drawing.Point(17, 286)
+        Me.btnInventory.Name = "btnInventory"
+        Me.btnInventory.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnInventory.Size = New System.Drawing.Size(201, 44)
+        Me.btnInventory.TabIndex = 5
+        Me.btnInventory.Text = "Inventory"
+        Me.btnInventory.UseTransparentBackground = True
+        '
+        'btnDelivery
+        '
+        Me.btnDelivery.Animated = True
+        Me.btnDelivery.AutoRoundedCorners = True
+        Me.btnDelivery.BackColor = System.Drawing.Color.Transparent
+        Me.btnDelivery.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnDelivery.DefaultAutoSize = True
+        Me.btnDelivery.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnDelivery.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnDelivery.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnDelivery.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnDelivery.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnDelivery.FillColor = System.Drawing.Color.Black
+        Me.btnDelivery.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnDelivery.ForeColor = System.Drawing.Color.White
+        Me.btnDelivery.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnDelivery.IndicateFocus = True
+        Me.btnDelivery.Location = New System.Drawing.Point(17, 242)
+        Me.btnDelivery.Name = "btnDelivery"
+        Me.btnDelivery.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnDelivery.Size = New System.Drawing.Size(201, 44)
+        Me.btnDelivery.TabIndex = 4
+        Me.btnDelivery.Text = "Delivery"
+        Me.btnDelivery.UseTransparentBackground = True
+        '
+        'btnFileMaintenance
+        '
+        Me.btnFileMaintenance.Animated = True
+        Me.btnFileMaintenance.AutoRoundedCorners = True
+        Me.btnFileMaintenance.BackColor = System.Drawing.Color.Transparent
+        Me.btnFileMaintenance.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnFileMaintenance.DefaultAutoSize = True
+        Me.btnFileMaintenance.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnFileMaintenance.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnFileMaintenance.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnFileMaintenance.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnFileMaintenance.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnFileMaintenance.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnFileMaintenance.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnFileMaintenance.ForeColor = System.Drawing.Color.White
+        Me.btnFileMaintenance.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnFileMaintenance.IndicateFocus = True
+        Me.btnFileMaintenance.Location = New System.Drawing.Point(17, 198)
+        Me.btnFileMaintenance.Name = "btnFileMaintenance"
+        Me.btnFileMaintenance.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnFileMaintenance.Size = New System.Drawing.Size(201, 44)
+        Me.btnFileMaintenance.TabIndex = 3
+        Me.btnFileMaintenance.Text = "File Maintenance"
+        Me.btnFileMaintenance.UseTransparentBackground = True
+        '
+        'btnHome
+        '
+        Me.btnHome.Animated = True
+        Me.btnHome.AutoRoundedCorners = True
+        Me.btnHome.BackColor = System.Drawing.Color.Transparent
+        Me.btnHome.Cursor = System.Windows.Forms.Cursors.Hand
+        Me.btnHome.DefaultAutoSize = True
+        Me.btnHome.DisabledState.BorderColor = System.Drawing.Color.DarkGray
+        Me.btnHome.DisabledState.CustomBorderColor = System.Drawing.Color.DarkGray
+        Me.btnHome.DisabledState.FillColor = System.Drawing.Color.FromArgb(CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer), CType(CType(169, Byte), Integer))
+        Me.btnHome.DisabledState.ForeColor = System.Drawing.Color.FromArgb(CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer), CType(CType(141, Byte), Integer))
+        Me.btnHome.Dock = System.Windows.Forms.DockStyle.Top
+        Me.btnHome.FillColor = System.Drawing.Color.Black
+        Me.btnHome.Font = New System.Drawing.Font("Arial", 11.25!, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        Me.btnHome.ForeColor = System.Drawing.Color.White
+        Me.btnHome.HoverState.FillColor = System.Drawing.Color.FromArgb(CType(CType(30, Byte), Integer), CType(CType(32, Byte), Integer), CType(CType(30, Byte), Integer))
+        Me.btnHome.IndicateFocus = True
+        Me.btnHome.Location = New System.Drawing.Point(17, 154)
+        Me.btnHome.Name = "btnHome"
+        Me.btnHome.Padding = New System.Windows.Forms.Padding(0, 8, 0, 8)
+        Me.btnHome.Size = New System.Drawing.Size(201, 44)
+        Me.btnHome.TabIndex = 2
+        Me.btnHome.Text = "Home"
+        Me.btnHome.UseTransparentBackground = True
+        '
+        'Guna2Panel21
+        '
+        Me.Guna2Panel21.Dock = System.Windows.Forms.DockStyle.Right
+        Me.Guna2Panel21.FillColor = System.Drawing.Color.Black
+        Me.Guna2Panel21.Location = New System.Drawing.Point(218, 154)
+        Me.Guna2Panel21.Name = "Guna2Panel21"
+        Me.Guna2Panel21.Size = New System.Drawing.Size(16, 731)
+        Me.Guna2Panel21.TabIndex = 76
+        '
+        'Guna2Panel17
+        '
+        Me.Guna2Panel17.Dock = System.Windows.Forms.DockStyle.Left
+        Me.Guna2Panel17.FillColor = System.Drawing.Color.Black
+        Me.Guna2Panel17.Location = New System.Drawing.Point(0, 154)
+        Me.Guna2Panel17.Name = "Guna2Panel17"
+        Me.Guna2Panel17.Size = New System.Drawing.Size(17, 731)
+        Me.Guna2Panel17.TabIndex = 75
+        '
+        'PictureBox2
+        '
+        Me.PictureBox2.Dock = System.Windows.Forms.DockStyle.Top
+        Me.PictureBox2.Image = CType(resources.GetObject("PictureBox2.Image"), System.Drawing.Image)
+        Me.PictureBox2.Location = New System.Drawing.Point(0, 0)
+        Me.PictureBox2.Margin = New System.Windows.Forms.Padding(4)
+        Me.PictureBox2.Name = "PictureBox2"
+        Me.PictureBox2.Size = New System.Drawing.Size(234, 154)
+        Me.PictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage
+        Me.PictureBox2.TabIndex = 57
+        Me.PictureBox2.TabStop = False
+        '
         'FrmDashboard
         '
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None
         Me.BackColor = System.Drawing.Color.FromArgb(CType(CType(60, Byte), Integer), CType(CType(61, Byte), Integer), CType(CType(55, Byte), Integer))
-        Me.ClientSize = New System.Drawing.Size(1556, 884)
+        Me.ClientSize = New System.Drawing.Size(1620, 885)
+        Me.Controls.Add(Me.Panel8)
+        Me.Controls.Add(Me.panelmenu)
         Me.Controls.Add(Me.Panel3)
         Me.Controls.Add(Me.Panel9)
         Me.Controls.Add(Me.chartCategory)
         Me.Controls.Add(Me.Panel6)
-        Me.Controls.Add(Me.Panel8)
         Me.Controls.Add(Me.Panel4)
         Me.Controls.Add(Me.Panel2)
         Me.Controls.Add(Me.Panel1)
         Me.Controls.Add(Me.Panel5)
-        Me.Controls.Add(Me.PanelMenu)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None
         Me.Margin = New System.Windows.Forms.Padding(4)
         Me.Name = "FrmDashboard"
@@ -755,12 +782,13 @@ Partial Class FrmDashboard
         Me.Panel6.ResumeLayout(False)
         CType(Me.chartSales, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.chartCategory, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.PictureBox1, System.ComponentModel.ISupportInitialize).EndInit()
-        Me.PanelMenu.ResumeLayout(False)
         Me.Panel9.ResumeLayout(False)
         Me.Panel9.PerformLayout()
         Me.Panel3.ResumeLayout(False)
         Me.Panel3.PerformLayout()
+        Me.panelmenu.ResumeLayout(False)
+        Me.panelmenu.PerformLayout()
+        CType(Me.PictureBox2, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
 
     End Sub
@@ -786,20 +814,22 @@ Partial Class FrmDashboard
     Friend WithEvents lblTransactions As Label
     Friend WithEvents lblSalesToday As Label
     Friend WithEvents lblDiscount As Label
-    Friend WithEvents PictureBox1 As PictureBox
-    Friend WithEvents btnHome As Button
-    Friend WithEvents btnFileMaintenance As Button
-    Friend WithEvents btnLogout As Button
-    Friend WithEvents btnDelivery As Button
-    Friend WithEvents btnInventory As Button
-    Friend WithEvents btnPos As Button
-    Friend WithEvents btnTransaction As Button
-    Friend WithEvents btnAuditTrail As Button
-    Friend WithEvents PanelMenu As Panel
     Friend WithEvents Panel9 As Panel
     Friend WithEvents lblActiveUSer As Label
     Friend WithEvents Label3 As Label
     Friend WithEvents Panel3 As Panel
     Friend WithEvents lblProfitToday As Label
     Friend WithEvents Label5 As Label
+    Friend WithEvents panelmenu As Guna.UI2.WinForms.Guna2Panel
+    Friend WithEvents btnLogout As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnAuditTrail As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnTransaction As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnPos As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnInventory As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnDelivery As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnFileMaintenance As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents btnHome As Guna.UI2.WinForms.Guna2Button
+    Friend WithEvents Guna2Panel21 As Guna.UI2.WinForms.Guna2Panel
+    Friend WithEvents Guna2Panel17 As Guna.UI2.WinForms.Guna2Panel
+    Friend WithEvents PictureBox2 As PictureBox
 End Class

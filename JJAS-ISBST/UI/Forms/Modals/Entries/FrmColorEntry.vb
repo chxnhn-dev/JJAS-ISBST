@@ -1,16 +1,34 @@
-Imports System.Data.SqlClient
 Imports JJAS_ISBST.FrmLogin
 
 Public Class FrmColorEntry
+    Private ReadOnly _service As New ColorService()
+
+    Public Property Mode As EntryFormMode = EntryFormMode.AddNew
+    Public Property SelectedId As Integer = -1
+
     Public Property ColorID As Integer?
+        Get
+            If SelectedId > 0 Then Return SelectedId
+            Return Nothing
+        End Get
+        Set(value As Integer?)
+            If value.HasValue Then
+                SelectedId = value.Value
+                Mode = EntryFormMode.EditExisting
+            Else
+                SelectedId = -1
+                Mode = EntryFormMode.AddNew
+            End If
+        End Set
+    End Property
 
     Private ReadOnly Property IsEditMode As Boolean
         Get
-            Return ColorID.HasValue
+            Return Mode = EntryFormMode.EditExisting AndAlso SelectedId > 0
         End Get
     End Property
 
-    Private Sub Add_Color_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmColorEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         BlockCopyPaste(txtBrand)
         ConfigureMode()
 
@@ -30,45 +48,19 @@ Public Class FrmColorEntry
     End Sub
 
     Private Sub LoadColorForEdit()
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand("SELECT Color FROM tbl_Color WHERE ColorID = @ColorID", connection)
-                command.Parameters.AddWithValue("@ColorID", ColorID.Value)
-                connection.Open()
-
-                Using reader As SqlDataReader = command.ExecuteReader()
-                    If reader.Read() Then
-                        txtBrand.Text = reader("Color").ToString()
-                    Else
-                        MessageBox.Show("Selected color record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                    End If
-                End Using
-            End Using
-        End Using
-    End Sub
-
-    Private Function IsDuplicate(fieldName As String, fieldValue As String) As Boolean
-        Dim sql As String = $"SELECT CASE WHEN EXISTS (SELECT 1 FROM tbl_Color WHERE LOWER({fieldName}) = LOWER(@Value)"
-
-        If IsEditMode Then
-            sql &= " AND ColorID <> @ColorID"
+        Dim row As DataRow = _service.GetColorById(SelectedId)
+        If row Is Nothing Then
+            MessageBox.Show("Selected color record was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
         End If
 
-        sql &= ") THEN 1 ELSE 0 END"
+        txtBrand.Text = row("Color").ToString()
+    End Sub
 
-        Using connection As SqlConnection = DataAccess.GetConnection()
-            Using command As New SqlCommand(sql, connection)
-                command.Parameters.AddWithValue("@Value", fieldValue)
-
-                If IsEditMode Then
-                    command.Parameters.AddWithValue("@ColorID", ColorID.Value)
-                End If
-
-                connection.Open()
-                Return Convert.ToBoolean(command.ExecuteScalar())
-            End Using
-        End Using
+    Private Function IsDuplicate(colorName As String) As Boolean
+        Return _service.IsDuplicateName(colorName, If(IsEditMode, CType(SelectedId, Integer?), Nothing))
     End Function
 
     Private Sub txtBrand_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtBrand.KeyPress
@@ -109,7 +101,7 @@ Public Class FrmColorEntry
             Exit Sub
         End If
 
-        If IsDuplicate("Color", colorName) Then
+        If IsDuplicate(colorName) Then
             MessageBox.Show("Color already exists.", "Duplicate", MessageBoxButtons.OK, MessageBoxIcon.Warning)
             Exit Sub
         End If
@@ -120,27 +112,7 @@ Public Class FrmColorEntry
         End If
 
         Try
-            Using connection As SqlConnection = DataAccess.GetConnection()
-                connection.Open()
-
-                Dim sql As String
-                If IsEditMode Then
-                    sql = "UPDATE tbl_Color SET Color=@Color, DateCreated=@DateCreated WHERE ColorID=@ColorID"
-                Else
-                    sql = "INSERT INTO tbl_Color (Color, DateCreated) VALUES (@Color, @DateCreated)"
-                End If
-
-                Using command As New SqlCommand(sql, connection)
-                    command.Parameters.AddWithValue("@Color", colorName)
-                    command.Parameters.AddWithValue("@DateCreated", DateTime.Now)
-
-                    If IsEditMode Then
-                        command.Parameters.AddWithValue("@ColorID", ColorID.Value)
-                    End If
-
-                    command.ExecuteNonQuery()
-                End Using
-            End Using
+            _service.SaveColor(Mode, SelectedId, colorName)
 
             LogActivity(CurrentUser.UserID, CurrentUser.FullName, CurrentUser.Username, CurrentUser.Role, If(IsEditMode, "Edited Color.", "Added Color."))
             MessageBox.Show(If(IsEditMode, "Updated successfully.", "Added successfully!"), "Success", MessageBoxButtons.OK, MessageBoxIcon.Information)
@@ -158,6 +130,5 @@ Public Class FrmColorEntry
     End Sub
 
     Private Sub Panel1_Paint(sender As Object, e As PaintEventArgs) Handles Panel1.Paint
-
     End Sub
 End Class

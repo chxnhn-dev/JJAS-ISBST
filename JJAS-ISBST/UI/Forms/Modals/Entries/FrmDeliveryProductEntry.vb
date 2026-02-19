@@ -1,6 +1,6 @@
-Imports System.Data.SqlClient
-
 Public Class FrmDeliveryProductEntry
+    Private ReadOnly _productService As New ProductService()
+
     Public Property ProductID As Integer?
 
     Public selectedID As Integer = -1
@@ -20,7 +20,7 @@ Public Class FrmDeliveryProductEntry
         End Get
     End Property
 
-    Private Sub Add_Product_Deliveries_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+    Private Sub FrmDeliveryProductEntry_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Try
             BlockCopyPaste(txtSearch)
             BlockCopyPaste(txtQuantity)
@@ -57,28 +57,20 @@ Public Class FrmDeliveryProductEntry
     End Sub
 
     Private Sub LoadProductForEdit()
-        Using conn As SqlConnection = DataAccess.GetConnection()
-            Using cmd As New SqlCommand("SELECT ProductID, Product, BarcodeNumber, SellingPrice, ImagePath FROM tbl_Products WHERE ProductID = @ProductID", conn)
-                cmd.Parameters.AddWithValue("@ProductID", ProductID.Value)
-                conn.Open()
+        Dim row As DataRow = _productService.GetProductById(ProductID.Value)
+        If row Is Nothing Then
+            MessageBox.Show("Selected product was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+            Me.DialogResult = DialogResult.Cancel
+            Me.Close()
+            Return
+        End If
 
-                Using reader As SqlDataReader = cmd.ExecuteReader()
-                    If reader.Read() Then
-                        selectedID = Convert.ToInt32(reader("ProductID"))
-                        txtProductName.Text = reader("Product").ToString().Trim()
-                        SelectedBarcode = reader("BarcodeNumber").ToString().Trim()
-                        txtSearch.Text = SelectedBarcode
-                        currentSellingPrice = If(IsDBNull(reader("SellingPrice")), 0D, Convert.ToDecimal(reader("SellingPrice")))
-                        currentImagePath = If(IsDBNull(reader("ImagePath")), "", reader("ImagePath").ToString().Trim())
-                    Else
-                        MessageBox.Show("Selected product was not found.", "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning)
-                        Me.DialogResult = DialogResult.Cancel
-                        Me.Close()
-                        Exit Sub
-                    End If
-                End Using
-            End Using
-        End Using
+        selectedID = Convert.ToInt32(row("ProductID"))
+        txtProductName.Text = row("Product").ToString().Trim()
+        SelectedBarcode = row("BarcodeNumber").ToString().Trim()
+        txtSearch.Text = SelectedBarcode
+        currentSellingPrice = If(IsDBNull(row("SellingPrice")), 0D, Convert.ToDecimal(row("SellingPrice")))
+        currentImagePath = If(IsDBNull(row("ImagePath")), "", row("ImagePath").ToString().Trim())
 
         txtQuantity.Text = If(SelectedQuantity > 0, SelectedQuantity.ToString(), "")
         txtCostPrice.Text = If(SelectedCostPrice > 0D, SelectedCostPrice.ToString("0.##"), "")
@@ -126,33 +118,22 @@ Public Class FrmDeliveryProductEntry
 
         lblPlaceholder.Visible = False
 
-        Dim sql As String = "SELECT TOP 1 ProductID, Product, BarcodeNumber, SellingPrice, ImagePath FROM tbl_Products WHERE IsActive = 1 AND BarcodeNumber LIKE @search"
-        Dim searchValue As String = "%" & txtSearch.Text.Trim() & "%"
-
-        Using conn As SqlConnection = DataAccess.GetConnection()
-            Using cmd As New SqlCommand(sql, conn)
-                cmd.Parameters.AddWithValue("@search", searchValue)
-                conn.Open()
-
-                Using reader As SqlDataReader = cmd.ExecuteReader()
-                    If reader.Read() Then
-                        selectedID = Convert.ToInt32(reader("ProductID"))
-                        txtProductName.Text = reader("Product").ToString().Trim()
-                        SelectedBarcode = reader("BarcodeNumber").ToString().Trim()
-                        currentSellingPrice = If(IsDBNull(reader("SellingPrice")), 0D, Convert.ToDecimal(reader("SellingPrice")))
-                        currentImagePath = If(IsDBNull(reader("ImagePath")), "", reader("ImagePath").ToString().Trim())
-                        txtSellingPrice.Text = currentSellingPrice.ToString("0.##")
-                    Else
-                        selectedID = -1
-                        txtProductName.Clear()
-                        SelectedBarcode = ""
-                        currentSellingPrice = 0D
-                        currentImagePath = ""
-                        txtSellingPrice.Clear()
-                    End If
-                End Using
-            End Using
-        End Using
+        Dim row As DataRow = _productService.FindFirstActiveProductByBarcode(txtSearch.Text.Trim())
+        If row IsNot Nothing Then
+            selectedID = Convert.ToInt32(row("ProductID"))
+            txtProductName.Text = row("Product").ToString().Trim()
+            SelectedBarcode = row("BarcodeNumber").ToString().Trim()
+            currentSellingPrice = If(IsDBNull(row("SellingPrice")), 0D, Convert.ToDecimal(row("SellingPrice")))
+            currentImagePath = If(IsDBNull(row("ImagePath")), "", row("ImagePath").ToString().Trim())
+            txtSellingPrice.Text = currentSellingPrice.ToString("0.##")
+        Else
+            selectedID = -1
+            txtProductName.Clear()
+            SelectedBarcode = ""
+            currentSellingPrice = 0D
+            currentImagePath = ""
+            txtSellingPrice.Clear()
+        End If
 
         UpdateAddButtonState()
     End Sub
@@ -161,9 +142,7 @@ Public Class FrmDeliveryProductEntry
         If Char.IsDigit(e.KeyChar) OrElse e.KeyChar = ControlChars.Back Then
             e.Handled = False
         ElseIf e.KeyChar = "."c Then
-            If txtCostPrice.Text.Contains(".") Then
-                e.Handled = True
-            End If
+            e.Handled = txtCostPrice.Text.Contains(".")
         Else
             e.Handled = True
         End If
@@ -173,9 +152,7 @@ Public Class FrmDeliveryProductEntry
         If Char.IsDigit(e.KeyChar) OrElse e.KeyChar = ControlChars.Back Then
             e.Handled = False
         ElseIf e.KeyChar = "."c Then
-            If txtSellingPrice.Text.Contains(".") Then
-                e.Handled = True
-            End If
+            e.Handled = txtSellingPrice.Text.Contains(".")
         Else
             e.Handled = True
         End If
@@ -269,6 +246,5 @@ Public Class FrmDeliveryProductEntry
     End Sub
 
     Private Sub Panel8_Paint(sender As Object, e As PaintEventArgs) Handles Panel8.Paint
-
     End Sub
 End Class
